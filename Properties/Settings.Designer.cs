@@ -25,12 +25,37 @@ namespace LanHistory.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::LanHistory.Model.FileHistoryInfo Configuration {
+        [global::System.Configuration.DefaultSettingValueAttribute("01:00:00")]
+        public global::System.TimeSpan BackupInterval {
             get {
-                return ((global::LanHistory.Model.FileHistoryInfo)(this["Configuration"]));
+                return ((global::System.TimeSpan)(this["BackupInterval"]));
             }
             set {
-                this["Configuration"] = value;
+                this["BackupInterval"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        public int WakeUp {
+            get {
+                return ((int)(this["WakeUp"]));
+            }
+            set {
+                this["WakeUp"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string MACAddressText {
+            get {
+                return ((string)(this["MACAddressText"]));
+            }
+            set {
+                this["MACAddressText"] = value;
             }
         }
     }

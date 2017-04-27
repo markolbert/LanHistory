@@ -9,23 +9,17 @@ namespace LanHistory.Design
 {
     public class DesignDataService : IDataService
     {
-        public (FileHistoryInfo fileHI, StringWriter log) GetSystemConfig()
+        public FileHistoryInfo GetSystemConfig()
         {
-            var fhInfo = new FileHistoryInfo()
+            return new FileHistoryInfo()
             {
                 LastBackup = DateTime.Now,
-                Interval = TimeSpan.FromMinutes( 60 ),
-                IPAddress = IPAddress.Loopback.ToString(),
+                IPAddress = IPAddress.Loopback,
                 IsRemote = true,
-                MacAddress = PhysicalAddress.None.ToString(),
-                ServerName = "SomeServer",
-                WakeUpTime = 3
+                MacAddress = PhysicalAddress.None,
+                MacAddressText = PhysicalAddress.None.ToString(),
+                ServerName = "SomeServer"
             };
-
-            StringWriter log = new StringWriter();
-            log.WriteLine("generated design-time data");
-
-            return (fhInfo, log);
         }
     }
 }

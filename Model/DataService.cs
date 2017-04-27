@@ -24,10 +24,15 @@ namespace LanHistory.Model
         [DllImport("Ws2_32.dll")]
         private static extern Int32 inet_addr(string ip);
 
-        public (FileHistoryInfo fileHI, StringWriter log) GetSystemConfig()
-        {
-            var log = new StringWriter();
+        private readonly ILogger _logger;
 
+        public DataService( ILogger logger )
+        {
+            _logger = logger;
+        }
+
+        public FileHistoryInfo GetSystemConfig()
+        {
             bool configValid = true;
             FileHistoryInfo retVal = new FileHistoryInfo();
 
@@ -39,12 +44,12 @@ namespace LanHistory.Model
 
                     if( lastBackup <= 0 )
                     {
-                        log.WriteLine($"Could not find registry key {RegistryHive.CurrentUser.ToString()}\\Software\\Microsoft\\Windows\\CurrentVersion\\FileHistory" );
+                        _logger.Error($"Could not find registry key {RegistryHive.CurrentUser.ToString()}\\Software\\Microsoft\\Windows\\CurrentVersion\\FileHistory" );
                         configValid = false;
                     }
                     else
                     {
-                        log.WriteLine( "retrieved last backup time" );
+                        _logger.Information( "retrieved last backup time" );
                         retVal.LastBackup = DateTime.FromFileTime( lastBackup ).ToLocalTime();
                     }
                 }
@@ -59,16 +64,16 @@ namespace LanHistory.Model
 
                     if( configPath == null )
                     {
-                        log.WriteLine( "Could not locate configuration files" );
-                        return (null, log);
+                        _logger.Error( "Could not locate configuration files" );
+                        return null;
                     }
 
                     configPath += "1.xml";
 
                     if( !File.Exists( configPath ) )
                     {
-                        log.WriteLine( $"Could not locate configuration file {configPath}" );
-                        return (null, log);
+                        _logger.Error( $"Could not locate configuration file {configPath}" );
+                        return null;
                     }
 
                     XDocument doc = null;
@@ -76,44 +81,32 @@ namespace LanHistory.Model
                     try
                     {
                         doc = XDocument.Parse( File.ReadAllText( configPath ) );
-                        log.WriteLine( "parsed File History configuration file" );
+                        _logger.Information( "parsed File History configuration file" );
                     }
                     catch( Exception e )
                     {
-                        log.WriteLine( $"Failed to parse File History configuration file, message was {e.Message}" );
-                        return (null, log);
+                        _logger.Error( $"Failed to parse File History configuration file, message was {e.Message}" );
+                        return null;
                     }
 
                     XElement target = doc.Descendants( "Target" ).FirstOrDefault();
                     if( target == null )
                     {
-                        log.WriteLine( "Could not locate ServerName information in File History configuration file" );
-                        return (null, log);
+                        _logger.Error( "Could not locate ServerName information in File History configuration file" );
+                        return null;
                     }
-                    else log.WriteLine( "found ServerName element in File History configuration file" );
+                    else _logger.Information( "found ServerName element in File History configuration file" );
 
                     XElement driveType = target.Descendants( "TargetDriveType" ).FirstOrDefault();
                     if( driveType == null )
                     {
-                        log.WriteLine( "Could not find TargetDriveType in File History configuration file" );
+                        _logger.Error( "Could not find TargetDriveType in File History configuration file" );
                         configValid = false;
                     }
                     else
                     {
-                        log.WriteLine( "found TargetDriveType element in File History configuration file" );
+                        _logger.Information( "found TargetDriveType element in File History configuration file" );
                         retVal.IsRemote = driveType.Value.Equals( "remote", StringComparison.OrdinalIgnoreCase );
-                    }
-
-                    XElement frequency = doc.Descendants( "DPFrequency" ).FirstOrDefault();
-                    if( frequency == null )
-                    {
-                        log.WriteLine( "Could not find backup frequency in File History configuration file" );
-                        configValid = false;
-                    }
-                    else
-                    {
-                        log.WriteLine( "found backup frequency element in File History configuration file" );
-                        retVal.Interval = TimeSpan.FromSeconds( Convert.ToInt32( frequency.Value ) );
                     }
 
                     XElement url = target.Element( "TargetUrl" );
@@ -123,12 +116,12 @@ namespace LanHistory.Model
 
                     if( String.IsNullOrEmpty( unc ) )
                     {
-                        log.WriteLine( "Could not find TargetUrl in File History configuration file" );
+                        _logger.Error( "Could not find TargetUrl in File History configuration file" );
                         configValid = false;
                     }
                     else
                     {
-                        log.WriteLine( "found TargetUrl element in File History configuration file" );
+                        _logger.Information( "found TargetUrl element in File History configuration file" );
                         parts = unc.Split( new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries );
                         configValid = parts.Length > 0;
                     }
@@ -136,17 +129,16 @@ namespace LanHistory.Model
                     if( configValid )
                     {
                         retVal.ServerName = parts[ 0 ];
-                        var ipAddress = Dns.GetHostAddresses( parts[ 0 ] ).FirstOrDefault();
+                        retVal.IPAddress = Dns.GetHostAddresses( parts[ 0 ] ).FirstOrDefault();
 
-                        if( ipAddress == null )
+                        if( retVal.IPAddress == null )
                         {
-                            log.WriteLine( "Could not get IP address for backup target" );
+                            _logger.Error( "Could not get IP address for backup target" );
                             configValid = false;
                         }
                         else
                         {
-                            retVal.IPAddress = ipAddress.ToString();
-                            log.WriteLine( "found IP address for backup target" );
+                            _logger.Information( "found IP address for backup target" );
 
                             Int32 curIPInt = inet_addr( retVal.IPAddress.ToString() );
 
@@ -156,16 +148,19 @@ namespace LanHistory.Model
                                 Int32 length = 6;
 
                                 int res = SendARP( curIPInt, 0, ref macInfo, ref length );
-                                retVal.MacAddress = string.Join( ":", BitConverter.GetBytes( macInfo )
-                                    .Where( ( x, i ) => i < 6 )
-                                    .Select( z => z.ToString( "X2" ) ) );
 
-                                log.WriteLine( "found MAC address for backup target" );
+                                if( macInfo == 0 )
+                                    _logger.Error( "No MAC address was found; is the server running?" );
+                                else
+                                {
+                                    retVal.MacAddress = new PhysicalAddress( BitConverter.GetBytes( macInfo ) );
+                                    _logger.Information("found MAC address for backup target");
+                                }
                             }
                             catch( Exception e )
                             {
                                 configValid = false;
-                                log.WriteLine( $"Failed to find MAC address for backup target, message was {e.Message}" );
+                                _logger.Error( $"Failed to find MAC address for backup target, message was {e.Message}" );
                             }
                         }
                     }
@@ -173,7 +168,7 @@ namespace LanHistory.Model
 
             }
 
-            return configValid ? (retVal, log) : (null, log);
+            return configValid ? retVal : null;
         }
 
         [Obsolete]

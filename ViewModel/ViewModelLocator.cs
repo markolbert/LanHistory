@@ -9,6 +9,7 @@
   DataContext="{Binding Source={StaticResource Locator}, Path=ViewModelName}"
 */
 
+using System;
 using System.Diagnostics;
 using Autofac;
 using Autofac.Extras.CommonServiceLocator;
@@ -16,6 +17,7 @@ using GalaSoft.MvvmLight;
 using LanHistory.Design;
 using Microsoft.Practices.ServiceLocation;
 using LanHistory.Model;
+using Serilog;
 
 namespace LanHistory.ViewModel
 {
@@ -39,9 +41,14 @@ namespace LanHistory.ViewModel
 
             builder.RegisterType<MainViewModel>();
 
-            builder.Register( c => new EventLog() { Source = "LanHistory" } );
+            // define rolling log files
+            string localAppPath = System.Environment.GetFolderPath( Environment.SpecialFolder.LocalApplicationData );
 
-            builder.RegisterType<UpTimeMonitor>().SingleInstance();
+            ILogger logger = new LoggerConfiguration().WriteTo
+                .RollingFile($@"{localAppPath}\LanHistory\log-{{Date}}.txt")
+                .CreateLogger();
+
+            builder.RegisterInstance( logger ).As<ILogger>().SingleInstance();
 
             _container = builder.Build();
 

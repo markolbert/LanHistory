@@ -13,17 +13,5 @@ namespace LanHistory
         {
             DispatcherHelper.Initialize();
         }
-
-        public App()
-        {
-        }
-
-        protected override void OnStartup( StartupEventArgs e )
-        {
-            base.OnStartup( e );
-
-            if( Settings.Default.Configuration == null )
-                Settings.Default.Configuration = new FileHistoryInfo();
-        }
     }
 }

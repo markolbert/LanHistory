@@ -3,13 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Reflection;
+using System.Timers;
 using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
 using LanHistory.Model;
 using LanHistory.Properties;
+using Microsoft.Win32;
 using Serilog;
 
 namespace LanHistory.ViewModel
@@ -20,45 +26,57 @@ namespace LanHistory.ViewModel
     /// See http://www.mvvmlight.net
     /// </para>
     /// </summary>
-    public class MainViewModel : ValidatedViewModelBase
+    public class MainViewModel : ValidatedViewModelBase, IDisposable
     {
-        private DateTime _lastBackup = Settings.Default.Configuration.LastBackup;
-        private TimeSpan _interval = Settings.Default.Configuration.Interval;
-        private string _serverName = Settings.Default.Configuration.ServerName;
-        private string _ipAddress = Settings.Default.Configuration.IPAddress;
-        private string _macAddress = Settings.Default.Configuration.MacAddress;
-        private bool _isRemote = Settings.Default.Configuration.IsRemote;
-        private int _wakeUp = Settings.Default.Configuration.WakeUpTime;
+        public const int DefaultWakeUpMinutes = 2;
 
-        private readonly Dictionary<string, ICollection<string>> _validationErrors =
-            new Dictionary<string, ICollection<string>>();
+        private readonly IDataService _dataService;
+        private readonly ILogger _logger;
 
-        /// <summary>
-        /// Initializes a new instance of the MainViewModel class.
-        /// </summary>
-        public MainViewModel( IDataService dataService )
+        private TimeSpan _interval = Settings.Default.BackupInterval;
+        private int _wakeUp = Settings.Default.WakeUp;
+        private PhysicalAddress _macAddress = PhysicalAddress.None;
+
+        private readonly Timer _timer;
+
+        public MainViewModel( IDataService dataService, ILogger logger )
         {
-            var (fhi, log) = dataService.GetSystemConfig();
+            _dataService = dataService;
+            _logger = logger;
 
-            if( fhi != null )
+            GetConfig();
+
+            _timer = new Timer();
+            _timer.Elapsed += BackupTimerElapsedHandler;
+            EnableTimer();
+
+            SystemEvents.PowerModeChanged += PowerModeChangedHandler;
+
+            WakeServerCommand = new RelayCommand( SendWakeOnLan, MacAddressIsValid );
+            RefreshConfigCommand = new RelayCommand( GetConfig );
+        }
+
+        [Required(ErrorMessage = "The backup server's MAC address must be defined; is the server awake?")]
+        public PhysicalAddress MacAddress
+        {
+            get => _macAddress;
+
+            set
             {
-                LastBackup = fhi.LastBackup;
-                Interval = fhi.Interval;
-                ServerName = fhi.ServerName;
-                IPAddress = fhi.IPAddress;
-                MacAddress = fhi.MacAddress;
-                IsRemote = fhi.IsRemote;
-                WakeUpTime = fhi.WakeUpTime;
+                _macAddress = value;
+                Set(ref _macAddress, value);
+
+                if (Validate(value, nameof(MacAddress)))
+                {
+                    Settings.Default.MACAddressText = PhysicalAddressFormatter.Format(value);
+                    Settings.Default.Save();
+
+                    EnableTimer();
+                }
             }
         }
 
-        public DateTime LastBackup
-        {
-            get => _lastBackup;
-            set => Set( ref _lastBackup, value );
-        }
-
-        [ Range( typeof(TimeSpan), "0:02:00", "23:59:59", ErrorMessage =
+        [Range( typeof(TimeSpan), "0:02:00", "23:59:59", ErrorMessage =
             "The backup interval must be between 2 minutes and 23:59:59" ) ]
         public TimeSpan Interval
         {
@@ -67,55 +85,155 @@ namespace LanHistory.ViewModel
             set
             {
                 Set( ref _interval, value );
-                Validate( value, nameof(Interval) );
+
+                if( Validate( value, nameof(Interval) ) )
+                    EnableTimer();
             }
         }
 
-        [ Required( ErrorMessage = "The backup server must be defined" ) ]
-        public string ServerName
-        {
-            get => _serverName;
-
-            set
-            {
-                Set( ref _serverName, value );
-                Validate( value, nameof(ServerName) );
-            }
-        }
-
-        public string IPAddress
-        {
-            get => _ipAddress;
-            set => Set( ref _ipAddress, value );
-        }
-
-        [Required(ErrorMessage = "The backup server's MAC address must be defined")]
-        public string MacAddress
-        {
-            get => _macAddress;
-
-            set
-            {
-                Set( ref _macAddress, value );
-                Validate( value, nameof(MacAddress) );
-            }
-        }
-
-        public bool IsRemote
-        {
-            get => _isRemote;
-            set => Set( ref _isRemote, value );
-        }
-
+        [ Range( 1, Int32.MaxValue, ErrorMessage = "The wake up period must be at least 1 minute" ) ]
         public int WakeUpTime
         {
             get => _wakeUp;
 
             set
             {
-                value = value < 0 ? UpTimeMonitor.DefaultWakeUpMinutes : value;
+                value = value < 0 ? DefaultWakeUpMinutes : value;
+
                 Set( ref _wakeUp, value );
+
+                if( Validate( value, nameof(WakeUpTime) ) )
+                    EnableTimer();
             }
+        }
+
+        public DateTime LastBackup { get; private set; }
+        public string ServerName { get; private set; }
+        public IPAddress IPAddress { get; private set; }
+        public bool IsRemote { get; private set; }
+
+        public RelayCommand WakeServerCommand { get; }
+        public RelayCommand RefreshConfigCommand { get; }
+
+        protected virtual void Dispose( bool disposing )
+        {
+            if( disposing )
+            {
+                _timer?.Dispose();
+                SystemEvents.PowerModeChanged -= PowerModeChangedHandler;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose( true );
+            GC.SuppressFinalize( this );
+        }
+
+        private void BackupTimerElapsedHandler( object sender, ElapsedEventArgs e )
+        {
+            //SendWakeOnLan();
+        }
+
+        private void EnableTimer()
+        {
+            bool goodToGo = IsRemote && !MacAddress.Equals(PhysicalAddress.None) && Interval > TimeSpan.Zero &&
+                            WakeUpTime > 0;
+
+            if (goodToGo)
+            {
+                _timer.Interval = Interval.TotalMilliseconds;
+                _timer.Start();
+            }
+        }
+
+        private void PowerModeChangedHandler(object sender, PowerModeChangedEventArgs e)
+        {
+                switch ( e.Mode )
+                {
+                    case PowerModes.Resume:
+                        _logger.Information("Resuming from sleep");
+                        _timer.Start();
+
+                        break;
+
+                    case PowerModes.Suspend:
+                        _logger.Information("Going to sleep");
+                        _timer.Stop();
+
+                        break;
+                }
+        }
+
+        private bool MacAddressIsValid()
+        {
+            return MacAddress != null && !MacAddress.Equals( PhysicalAddress.None );
+        }
+
+        private void SendWakeOnLan()
+        {
+            try
+            {
+                List<byte> magicPacket = new List<byte>();
+
+                for( int idx = 0; idx < 6; idx++ )
+                {
+                    magicPacket.Add( 0xFF );
+                }
+
+                byte[] macBytes = MacAddress.GetAddressBytes().Where( ( x, i ) => i < 6 ).ToArray();
+
+                for( int idx = 0; idx < 16; idx++ )
+                {
+                    magicPacket.AddRange( macBytes );
+                }
+
+                var client = new UdpClient();
+                int port = 7;
+
+                client.Connect( System.Net.IPAddress.Broadcast, port );
+                client.Send( magicPacket.ToArray(), magicPacket.Count );
+
+                client.Close();
+
+                _logger.Information( $"Sent wake-on-lan packet to {PhysicalAddressFormatter.Format( MacAddress )}" );
+            }
+            catch( Exception e )
+            {
+                _logger.Error(
+                    $"Failed to send wake-on-lan packet to {PhysicalAddressFormatter.Format( MacAddress )}; message was {e.Message}" );
+            }
+        }
+
+        private void GetConfig()
+        {
+            var fhi = _dataService.GetSystemConfig();
+
+            if (fhi == null)
+            {
+                // see if we have a MAC address on file
+                if (!String.IsNullOrEmpty(Settings.Default.MACAddressText))
+                {
+                    try
+                    {
+                        MacAddress = PhysicalAddress.Parse(Settings.Default.MACAddressText);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            else
+            {
+                LastBackup = fhi.LastBackup;
+                ServerName = fhi.ServerName;
+                IPAddress = fhi.IPAddress;
+                MacAddress = fhi.MacAddress;
+                IsRemote = fhi.IsRemote;
+            }
+
+            Validate(ServerName, nameof(ServerName));
+            Validate(MacAddress, nameof(MacAddress));
         }
 
         ////public override void Cleanup()

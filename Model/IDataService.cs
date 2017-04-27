@@ -9,6 +9,6 @@ namespace LanHistory.Model
 {
     public interface IDataService
     {
-        (FileHistoryInfo fileHI, StringWriter log) GetSystemConfig();
+        FileHistoryInfo GetSystemConfig();
     }
 }

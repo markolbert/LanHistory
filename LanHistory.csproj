@@ -67,6 +67,12 @@
     <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
       <HintPath>..\packages\Serilog.2.4.0\lib\net45\Serilog.dll</HintPath>
     </Reference>
+    <Reference Include="Serilog.Sinks.File, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>..\packages\Serilog.Sinks.File.3.2.0\lib\net45\Serilog.Sinks.File.dll</HintPath>
+    </Reference>
+    <Reference Include="Serilog.Sinks.RollingFile, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>..\packages\Serilog.Sinks.RollingFile.3.3.0\lib\net45\Serilog.Sinks.RollingFile.dll</HintPath>
+    </Reference>
     <Reference Include="Serilog.Sinks.TextWriter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
       <HintPath>..\packages\Serilog.Sinks.TextWriter.2.1.0\lib\net45\Serilog.Sinks.TextWriter.dll</HintPath>
     </Reference>
@@ -118,9 +124,9 @@
     <Compile Include="Model\DataService.cs" />
     <Compile Include="Model\FileHistoryInfo.cs" />
     <Compile Include="Model\IDataService.cs" />
+    <Compile Include="PhysicalAddressFormatter.cs" />
     <Compile Include="ValidatedViewModelBase.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
-    <Compile Include="ViewModel\UpTimeMonitor.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

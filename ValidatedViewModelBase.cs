@@ -29,7 +29,7 @@ namespace LanHistory
             return ValidationErrors[ propertyName ];
         }
 
-        protected void Validate( object value, string propertyName )
+        protected bool Validate( object value, string propertyName )
         {
             if( ValidationErrors.ContainsKey( propertyName ) )
                 ValidationErrors.Remove( propertyName );
@@ -44,6 +44,8 @@ namespace LanHistory
             ValidationErrors.Add( propertyName, errors );
 
             RaiseErrorsChanged( propertyName );
+
+            return errors.Any();
         }
 
         private void RaiseErrorsChanged( string propertyName )
