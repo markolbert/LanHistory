@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight;
 
-namespace LanHistory
+namespace Olbert.LanHistory
 {
     public class ValidatedViewModelBase : ViewModelBase, INotifyDataErrorInfo
     {

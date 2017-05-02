@@ -14,12 +14,12 @@ using System.Diagnostics;
 using Autofac;
 using Autofac.Extras.CommonServiceLocator;
 using GalaSoft.MvvmLight;
-using LanHistory.Design;
+using Olbert.LanHistory.Design;
 using Microsoft.Practices.ServiceLocation;
-using LanHistory.Model;
+using Olbert.LanHistory.Model;
 using Serilog;
 
-namespace LanHistory.ViewModel
+namespace Olbert.LanHistory.ViewModel
 {
     /// <summary>
     /// This class contains static references to all the view models in the
@@ -39,7 +39,11 @@ namespace LanHistory.ViewModel
             if( ViewModelBase.IsInDesignModeStatic ) builder.RegisterType<DesignDataService>().As<IDataService>();
             else builder.RegisterType<DataService>().As<IDataService>();
 
-            builder.RegisterType<MainViewModel>();
+            builder.RegisterType<ConfigurationViewModel>();
+            builder.RegisterType<LanHistoryModel>().SingleInstance();
+            builder.RegisterType<ContextMenuViewModel>().SingleInstance();
+            //builder.RegisterType<FileHistoryViewModel>().SingleInstance();
+            builder.RegisterType<BackupTimer>().SingleInstance();
 
             // define rolling log files
             string localAppPath = System.Environment.GetFolderPath( Environment.SpecialFolder.LocalApplicationData );
@@ -56,20 +60,24 @@ namespace LanHistory.ViewModel
         }
 
         ///// <summary>
-        ///// Gets the Main property.
+        ///// Gets the Configuration property.
         ///// </summary>
         //[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance",
         //    "CA1822:MarkMembersAsStatic",
         //    Justification = "This non-static member is needed for data binding purposes.")]
-        //public MainViewModel Main
+        //public ConfigurationViewModel Configuration
         //{
         //    get
         //    {
-        //        return ServiceLocator.Current.GetInstance<MainViewModel>();
+        //        return ServiceLocator.Current.GetInstance<ConfigurationViewModel>();
         //    }
         //}
 
-        public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
+        public ConfigurationViewModel Configuration => ServiceLocator.Current.GetInstance<ConfigurationViewModel>();
+        public LanHistoryModel LanHistoryModel => ServiceLocator.Current.GetInstance<LanHistoryModel>();
+        public ILogger Logger => ServiceLocator.Current.GetInstance<ILogger>();
+        //public FileHistoryViewModel FileHistoryViewModel => ServiceLocator.Current.GetInstance<FileHistoryViewModel>();
+        public BackupTimer BackupTimer => ServiceLocator.Current.GetInstance<BackupTimer>();
 
         /// <summary>
         /// Cleans up all the resources.

@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using Serilog;
 
-namespace LanHistory.Model
+namespace Olbert.LanHistory.Model
 {
     public interface IDataService
     {
-        FileHistoryInfo GetSystemConfig();
+        FileHistoryModel GetSystemConfig();
     }
 }

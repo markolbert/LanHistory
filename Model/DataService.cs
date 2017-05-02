@@ -14,7 +14,7 @@ using System.Xml.Linq;
 using Microsoft.Win32;
 using Serilog;
 
-namespace LanHistory.Model
+namespace Olbert.LanHistory.Model
 {
     public class DataService : IDataService
     {
@@ -31,10 +31,10 @@ namespace LanHistory.Model
             _logger = logger;
         }
 
-        public FileHistoryInfo GetSystemConfig()
+        public FileHistoryModel GetSystemConfig()
         {
             bool configValid = true;
-            FileHistoryInfo retVal = new FileHistoryInfo();
+            FileHistoryModel retVal = new FileHistoryModel();
 
             using( RegistryKey reg = RegistryKey.OpenBaseKey( RegistryHive.CurrentUser, RegistryView.Default ) )
             {

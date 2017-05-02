@@ -2,16 +2,16 @@
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
-using LanHistory.Model;
+using Olbert.LanHistory.Model;
 using Serilog;
 
-namespace LanHistory.Design
+namespace Olbert.LanHistory.Design
 {
     public class DesignDataService : IDataService
     {
-        public FileHistoryInfo GetSystemConfig()
+        public FileHistoryModel GetSystemConfig()
         {
-            return new FileHistoryInfo()
+            return new FileHistoryModel()
             {
                 LastBackup = DateTime.Now,
                 IPAddress = IPAddress.Loopback,

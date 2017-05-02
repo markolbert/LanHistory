@@ -7,7 +7,7 @@
     <ProjectGuid>{05CFE9E3-5FB2-49F5-8D9F-48ADA4D48158}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LanHistory</RootNamespace>
+    <RootNamespace>Olbert.LanHistory</RootNamespace>
     <AssemblyName>LanHistory</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -119,14 +119,26 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="converters\TimeSpanFormatter.cs" />
     <Compile Include="Design\DesignDataService.cs" />
+    <Compile Include="IClosable.cs" />
+    <Compile Include="converters\IntervalEqualityConverter.cs" />
+    <Compile Include="messages\ConfigurationChangedMessage.cs" />
+    <Compile Include="messages\BackupTimerTickMessage.cs" />
+    <Compile Include="messages\BackupResultMessage.cs" />
     <Compile Include="Model\DataItem.cs" />
     <Compile Include="Model\DataService.cs" />
-    <Compile Include="Model\FileHistoryInfo.cs" />
+    <Compile Include="Model\FileHistoryModel.cs" />
     <Compile Include="Model\IDataService.cs" />
-    <Compile Include="PhysicalAddressFormatter.cs" />
+    <Compile Include="Model\LanHistoryModel.cs" />
+    <Compile Include="messages\TimerIntervalMessage.cs" />
+    <Compile Include="messages\EnableTimerMessage.cs" />
+    <Compile Include="ViewModel\BackupTimer.cs" />
+    <Compile Include="ViewModel\FileHistoryViewModel.cs" />
+    <Compile Include="ViewModel\ContextMenuViewModel.cs" />
+    <Compile Include="converters\PhysicalAddressFormatter.cs" />
     <Compile Include="ValidatedViewModelBase.cs" />
-    <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="ViewModel\ConfigurationViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -140,6 +152,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="NotifyIconResources.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Skins\MainSkin.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -175,6 +191,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="assets\filehist32x32.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FileHistory\FileHistory.csproj">
+      <Project>{f4d5194b-47e3-45fe-98b7-65988afaaebd}</Project>
+      <Name>FileHistory</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,4 +1,4 @@
-﻿namespace LanHistory.Model
+﻿namespace Olbert.LanHistory.Model
 {
     public class DataItem
     {
