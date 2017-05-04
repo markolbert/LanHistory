@@ -15,6 +15,7 @@ namespace Olbert.LanHistory.Model
     {
         public DateTime LastBackup { get; set; } = DateTime.MinValue;
         public string ServerName { get; set; }
+        public string UNCPath { get; set; }
         public IPAddress IPAddress { get; set; } = IPAddress.None;
         public PhysicalAddress MacAddress { get; set; } = PhysicalAddress.None;
         public string MacAddressText { get; set; }

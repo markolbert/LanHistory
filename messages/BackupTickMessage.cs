@@ -2,7 +2,7 @@
 
 namespace Olbert.LanHistory
 {
-    public class BackupTimerTickMessage
+    public class BackupTickMessage
     {
         public TimeSpan TimeRemaining { get; set; }
     }

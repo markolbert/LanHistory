@@ -1,129 +1,182 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using System.Timers;
 using FileHistory;
 using GalaSoft.MvvmLight.Messaging;
 using Olbert.LanHistory.Model;
 using Microsoft.Win32;
+using Olbert.LanHistory.Properties;
 using Serilog;
 
 namespace Olbert.LanHistory.ViewModel
 {
     public class BackupTimer : IDisposable
     {
-        public double TimerTickMS = 30000;
+        public double BackupTimerTickMS = 30000;
+        public double ShareTimerTickMS = 60000;
+        public double KeepAwakeTimerTickMS = 5000;
 
-        private readonly LanHistoryModel _lhModel;
-        private readonly ILogger _logger;
-        private readonly Timer _timer;
+        private readonly Model.LanHistory _lh;
+        private readonly Timer _backupTimer;
+        private readonly Timer _shareTimer;
+        private readonly Timer _keepAwakeTimer;
+        private bool _shareAccessible;
+        private readonly Model.LanHistory _lanHistory;
 
         public BackupTimer()
         {
+            _backupTimer = new Timer( BackupTimerTickMS );
+            _backupTimer.Elapsed += BackupTimerTickHandler;
+            _backupTimer.Start();
+
+            PollLan();
+            _shareTimer = new Timer( ShareTimerTickMS );
+            _shareTimer.Elapsed += ShareTimerTickHandler;
+            _shareTimer.Start();
+
+            _keepAwakeTimer = new Timer(KeepAwakeTimerTickMS);
+            _keepAwakeTimer.Elapsed += KeepAwakeTimerTickHandler;
+
             ViewModelLocator vml = new ViewModelLocator();
 
-            _logger = vml.Logger ?? throw new NullReferenceException("Logger");
-            _lhModel = vml.LanHistoryModel ?? throw new NullReferenceException( "LanHistoryModel" );
+            _lanHistory = vml.LanHistory;
 
-            TimeRemaining = _lhModel.Interval;
-
-            _timer = new Timer( TimerTickMS );
-            _timer.Elapsed += TimerTickHandler;
-            _timer.Start();
-
-            Enabled = _lhModel.IsValid;
+            _lh = vml.LanHistory ?? throw new NullReferenceException( "LanHistory" );
+            Enabled = _lanHistory.IsValid;
 
             Messenger.Default.Register<EnableTimerMessage>( this, EnableTimerMessageHandler );
-            Messenger.Default.Register<ConfigurationChangedMessage>( this, ConfigurationChangedMessageHandler );
+            //Messenger.Default.Register<IntervalChangedMessage>( this, IntervalChangedMessageHandler );
+            //Messenger.Default.Register<WakeUpChangedMessage>( this, WakeUpChangedMessageHandler );
 
             SystemEvents.PowerModeChanged += PowerModeChangedHandler;
         }
 
-        public TimeSpan TimeRemaining { get; private set; }
         public bool Enabled { get; private set; }
-        public bool WakeUpSent { get; private set; }
 
         private void PowerModeChangedHandler( object sender, PowerModeChangedEventArgs e )
         {
+            ILogger logger = new ViewModelLocator().Logger;
+
             switch( e.Mode )
             {
                 case PowerModes.Resume:
-                    _logger.Information( "Resuming from sleep" );
-                    _timer.Start();
+                    logger.LogDebugInformation( "Resuming from sleep" );
+
+                    PollLan();
+                    _backupTimer.Start();
+
+                    Messenger.Default.Send<PowerModeMessage>( new PowerModeMessage() { Mode = e.Mode } );
 
                     break;
 
                 case PowerModes.Suspend:
-                    _logger.Information( "Going to sleep" );
-                    _timer.Stop();
+                    logger.LogDebugInformation( "Going to sleep" );
+
+                    _lanHistory.Save();
+
+                    Messenger.Default.Send<PowerModeMessage>(new PowerModeMessage() { Mode = e.Mode });
+
+                    _backupTimer.Stop();
 
                     break;
             }
         }
 
-        private void TimerTickHandler( object sender, ElapsedEventArgs e )
+        private void BackupTimerTickHandler( object sender, ElapsedEventArgs e )
         {
-            if (!Enabled) return;
+            if( !Enabled ) return;
 
-            double msRemaining = TimeRemaining.TotalMilliseconds;
+            var vml = new ViewModelLocator();
+            ILogger logger = vml.Logger;
 
-            if( msRemaining <= TimerTickMS + _lhModel.WakeUpTime * 60000 )
+            // always update backup info
+            LanHistoryMessage lhcm = LanHistoryMessage.GetChanged();
+
+            if( lhcm != null )
+                Messenger.Default.Send<LanHistoryMessage>( lhcm );
+
+            double msRemaining = _lanHistory.TimeRemaining.TotalMilliseconds;
+
+            if( msRemaining <= BackupTimerTickMS + _lanHistory.WakeUpTime * 60000 )
             {
-                if( msRemaining <= TimerTickMS )
+                if( msRemaining <= BackupTimerTickMS )
                 {
                     bool succeeded = false;
 
                     try
                     {
-                        using (FileHistoryService fhs = new FileHistoryService())
+                        using( FileHistoryService fhs = new FileHistoryService() )
                         {
                             fhs.Start();
                         }
 
-                        _logger.Information("Started backup");
+                        logger.LogDebugInformation( "Sent start backup signal" );
                         succeeded = true;
                     }
-                    catch (Exception exception)
+                    catch( Exception exception )
                     {
-                        _logger.Error(exception, "Backup failed; message was {Message}");
+                        logger.Error( exception, "Backup failed; message was {Message}" );
                     }
 
+                    _keepAwakeTimer.Stop();
                     Messenger.Default.Send<BackupResultMessage>( new BackupResultMessage() { Succeeded = succeeded } );
-
-                    WakeUpSent = false;
                 }
                 else
                 {
-                    if( !WakeUpSent )
-                    {
-                        (bool succeeded, string mesg) = _lhModel.SendWakeOnLan();
-
-                        if( succeeded )
-                        {
-                            WakeUpSent = true;
-
-                            _logger.Information( mesg );
-                        }
-                        else _logger.Error( mesg );
-                    }
+                    if( !_keepAwakeTimer.Enabled )  _keepAwakeTimer.Start();
                 }
             }
 
-            if( msRemaining <= TimerTickMS ) TimeRemaining = _lhModel.Interval;
-            else TimeRemaining -= TimeSpan.FromMilliseconds( TimerTickMS );
+            if ( msRemaining <= BackupTimerTickMS ) _lanHistory.TimeRemaining = _lanHistory.Interval;
+            else _lanHistory.TimeRemaining -= TimeSpan.FromMilliseconds( BackupTimerTickMS );
 
-            Messenger.Default.Send<BackupTimerTickMessage>(
-                new BackupTimerTickMessage() { TimeRemaining = TimeRemaining } );
+            Messenger.Default.Send<BackupTickMessage>(
+                new BackupTickMessage() { TimeRemaining = _lanHistory.TimeRemaining } );
+        }
+
+        private void ShareTimerTickHandler( object sender, ElapsedEventArgs e )
+        {
+            PollLan();
+        }
+
+        private void KeepAwakeTimerTickHandler( object sender, ElapsedEventArgs e )
+        {
+            (bool succeeded, string mesg) = _lh.SendWakeOnLan( repeats : 1 );
+
+            var logger = new ViewModelLocator().Logger;
+
+            if( succeeded ) logger.LogDebugInformation( mesg );
+            else logger.Error( mesg );
+        }
+
+        private async void PollLan()
+        {
+            var changed =
+                await ServerStatusMessage.GetChanged( _shareAccessible );
+
+            if( changed != null )
+            {
+                _shareAccessible = changed.ShareAccessible;
+
+                Messenger.Default.Send<ServerStatusMessage>( changed );
+            }
         }
 
         private void EnableTimerMessageHandler( EnableTimerMessage obj )
         {
-            if( obj != null )
-                Enabled = obj.Enabled;
+            if( obj != null ) Enabled = obj.Enabled;
         }
 
-        private void ConfigurationChangedMessageHandler(ConfigurationChangedMessage obj)
-        {
-            if( obj != null && obj.Interval < TimeRemaining ) TimeRemaining = obj.Interval;
-        }
+        //private void WakeUpChangedMessageHandler( WakeUpChangedMessage obj )
+        //{
+        //    if( obj != null ) _wakeUp = obj.WakeUpTime;
+        //}
+
+        //private void IntervalChangedMessageHandler( IntervalChangedMessage obj )
+        //{
+        //    if( obj != null ) _interval = obj.Interval;
+        //}
 
         ////public override void Cleanup()
         ////{
@@ -132,19 +185,20 @@ namespace Olbert.LanHistory.ViewModel
         ////    base.Cleanup();
         ////}
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose( bool disposing )
         {
-            if (disposing)
+            if( disposing )
             {
-                _timer?.Dispose();
+                _backupTimer?.Dispose();
+                _shareTimer?.Dispose();
                 SystemEvents.PowerModeChanged -= PowerModeChangedHandler;
             }
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            Dispose( true );
+            GC.SuppressFinalize( this );
         }
     }
 }

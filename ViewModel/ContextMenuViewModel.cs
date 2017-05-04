@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.Net.NetworkInformation;
 using System.Windows;
+using System.Windows.Documents;
 using FileHistory;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
+using Microsoft.Win32;
 using Olbert.LanHistory.Model;
+using Olbert.LanHistory.Properties;
 using Serilog;
 
 namespace Olbert.LanHistory.ViewModel
 {
-    public class ContextMenuViewModel : ViewModelBase
+    public class ContextMenuViewModel : ValidatedViewModelBase
     {
         public class DefaultBackupInterval : ViewModelBase
         {
@@ -39,15 +43,11 @@ namespace Olbert.LanHistory.ViewModel
             }
         }
 
-        //private readonly LanHistoryModel _lhModel;
-        private readonly ILogger _logger;
+        private readonly IDataService _dataService;
         private bool _backupSucceeded = true;
-        private bool _canBackup;
-        private bool _canWakeServer;
-        private DateTime _lastBackup;
-        private bool _backupTimerRunning;
-        private TimeSpan _interval;
-        private TimeSpan _timeRemaining;
+        private bool? _shareAccessible;
+        private readonly BackupTimer _backupTimer;
+        private readonly Model.LanHistory _lanHistory;
 
         private List<DefaultBackupInterval> _defIntervals =
             new List<DefaultBackupInterval>();
@@ -55,23 +55,11 @@ namespace Olbert.LanHistory.ViewModel
         public ContextMenuViewModel()
         {
             var vml = new ViewModelLocator();
-            _logger = vml.Logger;
-            LastBackup = vml.Configuration.LastBackup;
+            _dataService = vml.DataService ?? throw new NullReferenceException("IDataService");
+            _lanHistory = vml.LanHistory ?? throw new NullReferenceException( "LanHistory" );
+            _backupTimer = vml.BackupTimer ?? throw new NullReferenceException( "BackupTimer" );
 
-
-            using( var lhm = vml.LanHistoryModel )
-            {
-                Interval = lhm.Interval;
-                CanBackup = lhm.IsValid;
-                CanWakeServer = lhm.MacAddressIsValid;
-            }
-
-            using( var bt = vml.BackupTimer )
-            {
-                BackupTimerRunning = bt.Enabled;
-                TimeRemaining = bt.TimeRemaining;
-            }
-
+            OpeningEventCommand = new RelayCommand( OpeningEventHandler );
             ExitApplicationCommand = new RelayCommand( () => Application.Current.Shutdown() );
 
             ShowConfigurationWindowCommand =
@@ -80,77 +68,87 @@ namespace Olbert.LanHistory.ViewModel
             HideConfigurationWindowCommand =
                 new RelayCommand( () => ShowHideMainWindow( false ), () => !IsMainWindowOpen() );
 
-            BackupCommand = new RelayCommand(Backup, ()=>CanBackup);
-            WakeServerCommand = new RelayCommand( SendWakeOnLan, ()=> CanWakeServer );
-            SetBackupIntervalCommand = new RelayCommand<TimeSpan>(SetBackupInterval);
+            BackupCommand = new RelayCommand( Backup, () => _lanHistory.IsValid && ( ShareAccessible ?? false ) );
+            WakeServerCommand = new RelayCommand( SendWakeOnLan, () => _lanHistory.MacAddressIsValid );
+            SetBackupIntervalCommand = new RelayCommand<TimeSpan>( SetBackupInterval );
 
             Messenger.Default.Register<BackupResultMessage>( this, BackupResultMessageHandler );
-            Messenger.Default.Register<BackupTimerTickMessage>(this, BackupTimerTickMessageHandler);
+            Messenger.Default.Register<BackupTickMessage>( this, BackupTickMessageHandler );
             Messenger.Default.Register<EnableTimerMessage>( this, EnableTimerMessageHandler );
+            Messenger.Default.Register<ServerStatusMessage>( this, ServerStatusMessageHandler );
+            Messenger.Default.Register<LanHistoryMessage>( this, LanHistoryChangedMessageHandler );
+            Messenger.Default.Register<PowerModeMessage>( this, PowerModeMessageHandler );
 
             foreach( var interval in new int[] { 5, 10, 15, 30, 60, 120, 720, 1440 } )
             {
-                DefaultBackupInterval dbi = new DefaultBackupInterval(SetBackupIntervalCommand) { Interval = TimeSpan.FromMinutes( interval ) };
+                DefaultBackupInterval dbi =
+                    new DefaultBackupInterval( SetBackupIntervalCommand )
+                    {
+                        Interval = TimeSpan.FromMinutes( interval )
+                    };
                 dbi.IsSelected = dbi.Interval.Equals( Interval );
 
                 _defIntervals.Add( dbi );
             }
         }
 
-        public bool CanBackup
-        {
-            get => _canBackup;
-
-            set
-            {
-                Set<bool>( ref _canBackup, value );
-
-                RaisePropertyChanged( () => StatusMesg );
-            }
-        }
-
-        public bool CanWakeServer
-        {
-            get => _canWakeServer;
-
-            set
-            {
-                Set<bool>( ref _canWakeServer, value );
-
-                RaisePropertyChanged( () => NextBackup );
-            }
-        }
-
-        public bool BackupTimerRunning
-        {
-            get => _backupTimerRunning;
-
-            set
-            {
-                Set<bool>( ref _backupTimerRunning, value );
-
-                RaisePropertyChanged( () => NextBackup );
-            }
-        }
-
+        [ Range( typeof(TimeSpan), "0:02:00", "23:59:59", ErrorMessage =
+            "The backup interval must be between 2 minutes and 23:59:59" ) ]
         public TimeSpan Interval
         {
-            get => _interval;
+            get => _lanHistory.Interval;
+
             set
             {
-                Set<TimeSpan>( ref _interval, value );
-
-                using( var lh = new ViewModelLocator().LanHistoryModel )
+                if( Validate( value, "Interval" ) )
                 {
-                    lh.Interval = value;
-                }
+                    bool changed = !_lanHistory.Interval.Equals( value );
 
-                foreach( var defInterval in DefaultIntervals )
+                    if( changed )
+                    {
+                        _lanHistory.Interval = value;
+                        RaisePropertyChanged( () => Interval );
+
+                        foreach( var defInterval in DefaultIntervals )
+                        {
+                            defInterval.IsSelected = defInterval.Interval.Equals( value );
+                        }
+
+                        RaisePropertyChanged( () => DefaultIntervals );
+
+                        Messenger.Default.Send<IntervalChangedMessage>( new IntervalChangedMessage()
+                        {
+                            Interval = value
+                        } );
+                    }
+                }
+            }
+        }
+
+        [ Range( 1, Int32.MaxValue, ErrorMessage = "The wake up period must be at least 1 minute" ) ]
+        public int WakeUpTime
+        {
+            get => _lanHistory.WakeUpTime;
+
+            set
+            {
+                value = value < Model.LanHistory.MinimumWakeUpMinutes ? Model.LanHistory.MinimumWakeUpMinutes : value;
+
+                if( Validate( value, nameof(WakeUpTime) ) )
                 {
-                    defInterval.IsSelected = defInterval.Interval.Equals( value );
-                }
+                    bool changed = !_lanHistory.WakeUpTime.Equals( value );
 
-                RaisePropertyChanged( () => DefaultIntervals );
+                    if( changed )
+                    {
+                        _lanHistory.WakeUpTime = value;
+                        RaisePropertyChanged( () => WakeUpTime );
+
+                        Messenger.Default.Send<WakeUpChangedMessage>( new WakeUpChangedMessage()
+                        {
+                            WakeUpTime = value
+                        } );
+                    }
+                }
             }
         }
 
@@ -160,39 +158,21 @@ namespace Olbert.LanHistory.ViewModel
             set => Set<List<DefaultBackupInterval>>( ref _defIntervals, value );
         }
 
-        public TimeSpan TimeRemaining
+        public bool? ShareAccessible
         {
-            get => _timeRemaining;
+            get => _shareAccessible;
 
             set
             {
-                Set<TimeSpan>( ref _timeRemaining, value );
+                bool changed = !_shareAccessible.Equals( value );
 
-                RaisePropertyChanged( () => NextBackup );
-            }
-        }
+                _shareAccessible = value;
 
-        public bool BackupSucceeded
-        {
-            get => _backupSucceeded;
-
-            set
-            {
-                Set<bool>( ref _backupSucceeded, value );
-
-                RaisePropertyChanged( () => StatusMesg );
-            }
-        }
-
-        public DateTime LastBackup
-        {
-            get => _lastBackup;
-
-            set
-            {
-                Set<DateTime>( ref _lastBackup, value );
-
-                RaisePropertyChanged( () => StatusMesg );
+                if ( changed )
+                {
+                    RaisePropertyChanged( () => ShareAccessible );
+                    RaisePropertyChanged(() => ServerStatus);
+                }
             }
         }
 
@@ -200,11 +180,11 @@ namespace Olbert.LanHistory.ViewModel
         {
             get
             {
-                if( CanBackup )
+                if( _lanHistory.IsValid )
                 {
-                    if( !BackupSucceeded ) return "Manual backup failed";
+                    if( !_backupSucceeded ) return "Manual backup failed";
 
-                    return $"Last: {_lastBackup: M/d/yyyy h:mm tt}";
+                    return $"Last: {_lanHistory.LastBackup: M/d/yyyy h:mm tt}";
 
                 }
 
@@ -216,13 +196,28 @@ namespace Olbert.LanHistory.ViewModel
         {
             get
             {
-                if( CanBackup && BackupTimerRunning )
-                    return "Next: " + TimeRemaining.ToString( "h':'mm" );
+                if( !_lanHistory.IsValid )
+                    return "Next: invalid configuration";
 
-                return "Next: not running";
+                if( !_backupTimer.Enabled )
+                    return "Next: not running";
+
+                return "Next: " + DateTime.Now.Add( _lanHistory.TimeRemaining ).ToString( "M/d/yyyy h:mm tt" );
             }
         }
 
+        public string ServerStatus
+        {
+            get
+            {
+                if( ShareAccessible.HasValue)
+                    return ShareAccessible.Value ? "Server online" : "Server offline";
+
+                return "Checking server status...";
+            }
+        }
+
+        public RelayCommand OpeningEventCommand { get; }
         public RelayCommand ExitApplicationCommand { get; }
         public RelayCommand ShowConfigurationWindowCommand { get; }
         public RelayCommand HideConfigurationWindowCommand { get; }
@@ -230,28 +225,37 @@ namespace Olbert.LanHistory.ViewModel
         public RelayCommand WakeServerCommand { get; }
         public RelayCommand<TimeSpan> SetBackupIntervalCommand { get; }
 
+        private void OpeningEventHandler()
+        {
+            _lanHistory.LastBackup = _dataService.GetLastBackup();
+
+            RaisePropertyChanged( () => StatusMesg );
+        }
+
         private void Backup()
         {
+            var logger = new ViewModelLocator().Logger;
+
             try
             {
-                using (FileHistoryService fhs = new FileHistoryService())
+                using( FileHistoryService fhs = new FileHistoryService() )
                 {
                     fhs.Start();
                 }
 
-                _logger.Information("Started backup");
+                logger.Information( "Started backup" );
                 _backupSucceeded = true;
             }
-            catch (Exception e)
+            catch( Exception e )
             {
                 _backupSucceeded = true;
-                _logger.Error(e, "Backup failed; message was {Message}");
+                logger.Error( e, "Backup failed; message was {Message}" );
 
                 RaisePropertyChanged( () => StatusMesg );
             }
         }
 
-        private void ShowHideMainWindow(bool show)
+        private void ShowHideMainWindow( bool show )
         {
             Application.Current.MainWindow = new MainWindow();
 
@@ -266,43 +270,62 @@ namespace Olbert.LanHistory.ViewModel
 
         private void SendWakeOnLan()
         {
-            using( var lhModel = new ViewModelLocator().LanHistoryModel )
-            {
-                (bool succeeded, string mesg) = lhModel.SendWakeOnLan();
+            var vml = new ViewModelLocator();
 
-                if (succeeded) _logger.Information(mesg);
-                else _logger.Error(mesg);
-            }
+            (bool succeeded, string mesg) = vml.LanHistory.SendWakeOnLan();
+
+            var logger = vml.Logger;
+
+            if( succeeded ) logger.Information( mesg );
+            else logger.Error( mesg );
         }
 
         private void SetBackupInterval( TimeSpan timeSpan )
         {
             Interval = timeSpan;
-
-            ConfigurationViewModel cvm = new ViewModelLocator().Configuration;
-
-            Messenger.Default.Send<ConfigurationChangedMessage>(
-                new ConfigurationChangedMessage()
-                {
-                    Interval = Interval,
-                    MacAddress = cvm.MacAddress,
-                    WakeUpTime = cvm.WakeUpTime
-                } );
         }
 
-        private void BackupResultMessageHandler(BackupResultMessage obj)
+        private void BackupResultMessageHandler( BackupResultMessage obj )
         {
-            BackupSucceeded = obj?.Succeeded ?? false;
+            _backupSucceeded = obj?.Succeeded ?? false;
+
+            RaisePropertyChanged( () => StatusMesg );
         }
 
-        private void BackupTimerTickMessageHandler(BackupTimerTickMessage obj)
+        private void BackupTickMessageHandler( BackupTickMessage obj )
         {
-            if( obj != null ) TimeRemaining = obj.TimeRemaining;
+            if( obj != null )
+                RaisePropertyChanged( () => NextBackup );
         }
 
         private void EnableTimerMessageHandler( EnableTimerMessage obj )
         {
-            BackupTimerRunning = obj?.Enabled ?? false;
+            RaisePropertyChanged( () => NextBackup );
+        }
+
+        private void ServerStatusMessageHandler( ServerStatusMessage obj )
+        {
+            if( obj != null )
+                ShareAccessible = obj.ShareAccessible;
+        }
+
+        private void LanHistoryChangedMessageHandler( LanHistoryMessage obj )
+        {
+            RaisePropertyChanged( () => StatusMesg );
+            RaisePropertyChanged( () => NextBackup );
+        }
+
+        private void PowerModeMessageHandler(PowerModeMessage obj)
+        {
+            if( obj != null && obj.Mode == PowerModes.Resume )
+            {
+                ShareAccessible = null;
+
+                _lanHistory.LastBackup = _dataService.GetLastBackup();
+
+                RaisePropertyChanged(() => StatusMesg);
+                RaisePropertyChanged( () => NextBackup );
+            }
         }
 
     }

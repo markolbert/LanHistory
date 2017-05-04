@@ -58,5 +58,52 @@ namespace Olbert.LanHistory.Properties {
                 this["MACAddressText"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00:00:00")]
+        public global::System.TimeSpan TimeRemaining {
+            get {
+                return ((global::System.TimeSpan)(this["TimeRemaining"]));
+            }
+            set {
+                this["TimeRemaining"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string UNCPath {
+            get {
+                return ((string)(this["UNCPath"]));
+            }
+            set {
+                this["UNCPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IsRemote {
+            get {
+                return ((bool)(this["IsRemote"]));
+            }
+            set {
+                this["IsRemote"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.DateTime LastBackup {
+            get {
+                return ((global::System.DateTime)(this["LastBackup"]));
+            }
+            set {
+                this["LastBackup"] = value;
+            }
+        }
     }
 }

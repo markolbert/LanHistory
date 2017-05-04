@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="LanHistory.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Olbert.LanHistory.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="BackupInterval" Type="System.TimeSpan" Scope="User">
@@ -9,6 +9,18 @@
       <Value Profile="(Default)">2</Value>
     </Setting>
     <Setting Name="MACAddressText" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="TimeRemaining" Type="System.TimeSpan" Scope="User">
+      <Value Profile="(Default)">00:00:00</Value>
+    </Setting>
+    <Setting Name="UNCPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="IsRemote" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="LastBackup" Type="System.DateTime" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

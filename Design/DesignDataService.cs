@@ -21,5 +21,20 @@ namespace Olbert.LanHistory.Design
                 ServerName = "SomeServer"
             };
         }
+
+        public DateTime GetLastBackup()
+        {
+            return DateTime.Now;
+        }
+
+        public Model.LanHistory GetLanHistory()
+        {
+            return new Model.LanHistory()
+            {
+                IsRemote = true,
+                MacAddress = PhysicalAddress.None,
+                MACAddressText = PhysicalAddress.None.ToString(),
+            };
+        }
     }
 }

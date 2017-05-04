@@ -9,6 +9,7 @@ namespace Olbert.LanHistory.Model
 {
     public interface IDataService
     {
-        FileHistoryModel GetSystemConfig();
+        DateTime GetLastBackup();
+        LanHistory GetLanHistory();
     }
 }

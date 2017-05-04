@@ -119,26 +119,26 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="converters\NullableBooleanConverter.cs" />
     <Compile Include="converters\TimeSpanFormatter.cs" />
     <Compile Include="Design\DesignDataService.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="IClosable.cs" />
     <Compile Include="converters\IntervalEqualityConverter.cs" />
-    <Compile Include="messages\ConfigurationChangedMessage.cs" />
-    <Compile Include="messages\BackupTimerTickMessage.cs" />
+    <Compile Include="messages\PowerModeMessage.cs" />
+    <Compile Include="messages\LanHistoryMessage.cs" />
+    <Compile Include="messages\BackupTickMessage.cs" />
     <Compile Include="messages\BackupResultMessage.cs" />
-    <Compile Include="Model\DataItem.cs" />
+    <Compile Include="messages\ServerStatusMessage.cs" />
     <Compile Include="Model\DataService.cs" />
     <Compile Include="Model\FileHistoryModel.cs" />
     <Compile Include="Model\IDataService.cs" />
-    <Compile Include="Model\LanHistoryModel.cs" />
-    <Compile Include="messages\TimerIntervalMessage.cs" />
+    <Compile Include="Model\LanHistory.cs" />
     <Compile Include="messages\EnableTimerMessage.cs" />
     <Compile Include="ViewModel\BackupTimer.cs" />
-    <Compile Include="ViewModel\FileHistoryViewModel.cs" />
     <Compile Include="ViewModel\ContextMenuViewModel.cs" />
     <Compile Include="converters\PhysicalAddressFormatter.cs" />
     <Compile Include="ValidatedViewModelBase.cs" />
-    <Compile Include="ViewModel\ConfigurationViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

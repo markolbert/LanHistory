@@ -45,7 +45,7 @@ namespace Olbert.LanHistory
 
             RaiseErrorsChanged( propertyName );
 
-            return errors.Any();
+            return !errors.Any();
         }
 
         private void RaiseErrorsChanged( string propertyName )

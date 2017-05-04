@@ -9,25 +9,51 @@ using Olbert.LanHistory.Properties;
 
 namespace Olbert.LanHistory.Model
 {
-    public class LanHistoryModel : IDisposable
+    public class LanHistory : IDisposable
     {
+        public const int MinimumWakeUpMinutes = 2;
+        public static TimeSpan MinimumBackupInterval = TimeSpan.FromMinutes( 5 );
+
         private PhysicalAddress _macAddress;
         private string _macAddrText;
-        private Timer _timer;
+        private readonly Timer _timer;
         private int _numToSend = 0;
+        private string _uncPath;
+        private TimeSpan _interval = TimeSpan.Zero;
+        private int _wakeUp = 0;
+        private bool? _isRemote;
+        private TimeSpan _remaining = TimeSpan.Zero;
+        private DateTime? _lastBackup;
 
-        public LanHistoryModel()
+        public LanHistory()
         {
             _timer = new Timer();
             _timer.Elapsed += TimerElapsed;
         }
 
-        private void TimerElapsed(object sender, ElapsedEventArgs e)
+        public bool IsRemote
         {
-            SendWakeOnLanInternal();
+            get
+            {
+                if( !_isRemote.HasValue ) _isRemote = Settings.Default.IsRemote;
 
-            _numToSend--;
-            _timer.Enabled = _numToSend > 0;
+                return _isRemote.Value;
+            }
+
+            set => _isRemote = value;
+        }
+
+        public string UNCPath
+        {
+            get
+            {
+                if( String.IsNullOrEmpty( _uncPath ) )
+                    _uncPath = Settings.Default.UNCPath;
+
+                return _uncPath;
+            }
+
+            set => _uncPath = value;
         }
 
         public PhysicalAddress MacAddress
@@ -68,9 +94,6 @@ namespace Olbert.LanHistory.Model
             {
                 _macAddrText = value;
 
-                Settings.Default.MACAddressText = value;
-                Settings.Default.Save();
-
                 try
                 {
                     _macAddress = PhysicalAddress.Parse( value );
@@ -81,30 +104,86 @@ namespace Olbert.LanHistory.Model
             }
         }
 
+        public DateTime LastBackup
+        {
+            get
+            {
+                if( !_lastBackup.HasValue ) _lastBackup = Settings.Default.LastBackup;
+
+                return _lastBackup.Value;
+            }
+
+            set => _lastBackup = value;
+        }
+
         public TimeSpan Interval
         {
-            get => Settings.Default.BackupInterval;
+            get
+            {
+                if( _interval.Equals( TimeSpan.Zero ) )
+                    _interval = Settings.Default.BackupInterval;
+
+                if( _interval < MinimumBackupInterval ) _interval = MinimumBackupInterval;
+
+                return _interval;
+            }
 
             set
             {
-                Settings.Default.BackupInterval = value;
-                Settings.Default.Save();
+                if( value < MinimumBackupInterval ) value = MinimumBackupInterval;
+
+                _interval = value;
             }
+        }
+
+        public TimeSpan TimeRemaining
+        {
+            get
+            {
+                if (_remaining.Equals(TimeSpan.Zero))
+                    _remaining = Settings.Default.TimeRemaining;
+
+                return _remaining;
+            }
+
+            set => _remaining = value;
         }
 
         public int WakeUpTime
         {
-            get => Settings.Default.WakeUp;
+            get
+            {
+                if( _wakeUp < MinimumWakeUpMinutes ) _wakeUp = MinimumWakeUpMinutes;
+
+                return _wakeUp;
+            }
 
             set
             {
-                Settings.Default.WakeUp = value;
-                Settings.Default.Save();
+                if( value < MinimumWakeUpMinutes ) value = MinimumWakeUpMinutes;
+
+                _wakeUp = value;
             }
         }
 
         public bool MacAddressIsValid => MacAddress != null && !MacAddress.Equals( PhysicalAddress.None );
-        public bool IsValid => MacAddressIsValid && Interval > TimeSpan.Zero && WakeUpTime > 0;
+
+        public bool IsValid => MacAddressIsValid
+                               && Settings.Default.BackupInterval > TimeSpan.Zero
+                               && Settings.Default.WakeUp > 0;
+
+        public void Save()
+        {
+            Settings.Default.BackupInterval = Interval;
+            Settings.Default.IsRemote = IsRemote;
+            Settings.Default.LastBackup = LastBackup;
+            Settings.Default.MACAddressText = MACAddressText;
+            Settings.Default.TimeRemaining = TimeRemaining;
+            Settings.Default.UNCPath = UNCPath;
+            Settings.Default.WakeUp = WakeUpTime;
+
+            Settings.Default.Save();
+        }
 
         public (bool succeeded, string mesg) SendWakeOnLan( int repeats = 3, int msDelay = 100 )
         {
@@ -158,6 +237,14 @@ namespace Olbert.LanHistory.Model
                     $"Failed to send wake-on-lan packet to {PhysicalAddressFormatter.Format( MacAddress )}; message was {e.Message}"
                     );
             }
+        }
+
+        private void TimerElapsed(object sender, ElapsedEventArgs e)
+        {
+            SendWakeOnLanInternal();
+
+            _numToSend--;
+            _timer.Enabled = _numToSend > 0;
         }
 
         protected virtual void Dispose( bool disposing )

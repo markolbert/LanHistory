@@ -18,6 +18,7 @@ using Olbert.LanHistory.Design;
 using Microsoft.Practices.ServiceLocation;
 using Olbert.LanHistory.Model;
 using Serilog;
+using Serilog.Core;
 
 namespace Olbert.LanHistory.ViewModel
 {
@@ -39,20 +40,36 @@ namespace Olbert.LanHistory.ViewModel
             if( ViewModelBase.IsInDesignModeStatic ) builder.RegisterType<DesignDataService>().As<IDataService>();
             else builder.RegisterType<DataService>().As<IDataService>();
 
-            builder.RegisterType<ConfigurationViewModel>();
-            builder.RegisterType<LanHistoryModel>().SingleInstance();
+            builder.Register<Model.LanHistory>( ctx =>
+                {
+                    var lhm = new Model.LanHistory();
+
+                    var dataService = ctx.Resolve<IDataService>();
+                    var curLH = dataService.GetLanHistory();
+
+                    if( curLH != null )
+                    {
+                        lhm.LastBackup = curLH.LastBackup;
+                        lhm.MacAddress = curLH.MacAddress;
+                        lhm.UNCPath = curLH.UNCPath;
+                    }
+
+                    return lhm;
+                } )
+                .SingleInstance();
+
             builder.RegisterType<ContextMenuViewModel>().SingleInstance();
-            //builder.RegisterType<FileHistoryViewModel>().SingleInstance();
             builder.RegisterType<BackupTimer>().SingleInstance();
 
-            // define rolling log files
+            // define shared rolling log files
             string localAppPath = System.Environment.GetFolderPath( Environment.SpecialFolder.LocalApplicationData );
 
-            ILogger logger = new LoggerConfiguration().WriteTo
-                .RollingFile($@"{localAppPath}\LanHistory\log-{{Date}}.txt")
-                .CreateLogger();
-
-            builder.RegisterInstance( logger ).As<ILogger>().SingleInstance();
+            builder.Register<Logger>( ctx =>
+                    new LoggerConfiguration()
+                        .WriteTo
+                        .RollingFile( pathFormat: $@"{localAppPath}\LanHistory\log-{{Date}}.txt", shared: true )
+                        .CreateLogger() )
+                .As<ILogger>();
 
             _container = builder.Build();
 
@@ -73,11 +90,10 @@ namespace Olbert.LanHistory.ViewModel
         //    }
         //}
 
-        public ConfigurationViewModel Configuration => ServiceLocator.Current.GetInstance<ConfigurationViewModel>();
-        public LanHistoryModel LanHistoryModel => ServiceLocator.Current.GetInstance<LanHistoryModel>();
+        public Model.LanHistory LanHistory => ServiceLocator.Current.GetInstance<Model.LanHistory>();
         public ILogger Logger => ServiceLocator.Current.GetInstance<ILogger>();
-        //public FileHistoryViewModel FileHistoryViewModel => ServiceLocator.Current.GetInstance<FileHistoryViewModel>();
         public BackupTimer BackupTimer => ServiceLocator.Current.GetInstance<BackupTimer>();
+        public IDataService DataService => ServiceLocator.Current.GetInstance<IDataService>();
 
         /// <summary>
         /// Cleans up all the resources.

@@ -37,6 +37,9 @@ namespace Olbert.LanHistory
             _notifyIcon?.Dispose(); 
             _timer?.Dispose();
 
+            ViewModelLocator locator = (ViewModelLocator)FindResource("Locator");
+            locator?.LanHistory.Save();
+
             base.OnExit(e);
         }
     }
