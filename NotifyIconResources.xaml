@@ -39,6 +39,7 @@
                 <Style>
                     <Setter Property="MenuItem.Header" Value="{Binding Interval, Converter={StaticResource TimeSpanFormatter}}" />
                     <Setter Property="MenuItem.IsChecked" Value="{Binding IsSelected}" />
+                    <Setter Property="MenuItem.IsHitTestVisible" Value="{Binding IsHitTestVisible}" />
                     <Setter Property="MenuItem.Command" Value="{Binding SetBackupIntervalCommand}" />
                     <Setter Property="MenuItem.CommandParameter" Value="{Binding Interval}" />
                 </Style>

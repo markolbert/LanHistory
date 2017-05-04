@@ -13,20 +13,26 @@ namespace Olbert.LanHistory
     {
         public static string Format( TimeSpan toConv )
         {
-            if( toConv.Days == 0 )
-            {
-                if( toConv.Hours == 0 ) return $"{toConv.Minutes} minutes";
+            if( toConv.Equals( TimeSpan.MaxValue ) ) return "Other";
 
-                if( toConv.Minutes == 0 )
-                    return $"{toConv.Hours} hour" + (toConv.Hours == 1 ? String.Empty : "s");
-            }
-            else
+            StringBuilder retVal = new StringBuilder();
+
+            if( toConv.Days > 0 )
+                retVal.Append( $"{toConv.Days} day" + ( toConv.Days == 1 ? String.Empty : "s" ) );
+
+            if( toConv.Hours > 0 )
             {
-                if( toConv.Hours == 0 && toConv.Minutes == 0 )
-                    return $"{toConv.Days} day" + ( toConv.Days == 1 ? String.Empty : "s" );
+                if( retVal.Length > 0 ) retVal.Append( " " );
+                retVal.Append( $"{toConv.Hours} hour" + ( toConv.Hours == 1 ? String.Empty : "s" ) );
             }
 
-            return toConv.ToString( "d h:mm" );
+            if( toConv.Minutes > 0 )
+            {
+                if (retVal.Length > 0) retVal.Append(" ");
+                retVal.Append( $"{toConv.Minutes} minute" + ( toConv.Minutes == 1 ? String.Empty : "s" ) );
+            }
+
+            return retVal.ToString();
         }
 
         public object Convert( object value, Type targetType, object parameter, CultureInfo culture )

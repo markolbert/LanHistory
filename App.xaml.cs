@@ -1,11 +1,6 @@
-﻿using System.Diagnostics;
-using System.Timers;
-using System.Windows;
+﻿using System.Windows;
 using GalaSoft.MvvmLight.Threading;
 using Hardcodet.Wpf.TaskbarNotification;
-using Olbert.LanHistory.Model;
-using Olbert.LanHistory.Properties;
-using Microsoft.Win32;
 using Olbert.LanHistory.ViewModel;
 
 namespace Olbert.LanHistory

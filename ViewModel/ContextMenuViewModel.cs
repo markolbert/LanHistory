@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Net.NetworkInformation;
 using System.Windows;
 using System.Windows.Documents;
@@ -41,6 +42,8 @@ namespace Olbert.LanHistory.ViewModel
                 get => _isSelected;
                 set => Set<bool>( ref _isSelected, value );
             }
+
+            public bool IsHitTestVisible { get; set; } = true;
         }
 
         private readonly IDataService _dataService;
@@ -48,25 +51,17 @@ namespace Olbert.LanHistory.ViewModel
         private bool? _shareAccessible;
         private readonly BackupTimer _backupTimer;
         private readonly Model.LanHistory _lanHistory;
-
-        private List<DefaultBackupInterval> _defIntervals =
-            new List<DefaultBackupInterval>();
+        private List<DefaultBackupInterval> _defIntervals = new List<DefaultBackupInterval>();
 
         public ContextMenuViewModel()
         {
             var vml = new ViewModelLocator();
-            _dataService = vml.DataService ?? throw new NullReferenceException("IDataService");
+            _dataService = vml.DataService ?? throw new NullReferenceException( "IDataService" );
             _lanHistory = vml.LanHistory ?? throw new NullReferenceException( "LanHistory" );
             _backupTimer = vml.BackupTimer ?? throw new NullReferenceException( "BackupTimer" );
 
             OpeningEventCommand = new RelayCommand( OpeningEventHandler );
             ExitApplicationCommand = new RelayCommand( () => Application.Current.Shutdown() );
-
-            ShowConfigurationWindowCommand =
-                new RelayCommand( () => ShowHideMainWindow( true ), () => !IsMainWindowOpen() );
-
-            HideConfigurationWindowCommand =
-                new RelayCommand( () => ShowHideMainWindow( false ), () => !IsMainWindowOpen() );
 
             BackupCommand = new RelayCommand( Backup, () => _lanHistory.IsValid && ( ShareAccessible ?? false ) );
             WakeServerCommand = new RelayCommand( SendWakeOnLan, () => _lanHistory.MacAddressIsValid );
@@ -90,6 +85,8 @@ namespace Olbert.LanHistory.ViewModel
 
                 _defIntervals.Add( dbi );
             }
+
+            UpdateDefaultIntervals( _lanHistory.Interval );
         }
 
         [ Range( typeof(TimeSpan), "0:02:00", "23:59:59", ErrorMessage =
@@ -109,12 +106,7 @@ namespace Olbert.LanHistory.ViewModel
                         _lanHistory.Interval = value;
                         RaisePropertyChanged( () => Interval );
 
-                        foreach( var defInterval in DefaultIntervals )
-                        {
-                            defInterval.IsSelected = defInterval.Interval.Equals( value );
-                        }
-
-                        RaisePropertyChanged( () => DefaultIntervals );
+                        UpdateDefaultIntervals( value );
 
                         Messenger.Default.Send<IntervalChangedMessage>( new IntervalChangedMessage()
                         {
@@ -155,7 +147,7 @@ namespace Olbert.LanHistory.ViewModel
         public List<DefaultBackupInterval> DefaultIntervals
         {
             get => _defIntervals;
-            set => Set<List<DefaultBackupInterval>>( ref _defIntervals, value );
+            //set => Set<List<DefaultBackupInterval>>( ref _defIntervals, value );
         }
 
         public bool? ShareAccessible
@@ -168,10 +160,10 @@ namespace Olbert.LanHistory.ViewModel
 
                 _shareAccessible = value;
 
-                if ( changed )
+                if( changed )
                 {
                     RaisePropertyChanged( () => ShareAccessible );
-                    RaisePropertyChanged(() => ServerStatus);
+                    RaisePropertyChanged( () => ServerStatus );
                 }
             }
         }
@@ -210,7 +202,7 @@ namespace Olbert.LanHistory.ViewModel
         {
             get
             {
-                if( ShareAccessible.HasValue)
+                if( ShareAccessible.HasValue )
                     return ShareAccessible.Value ? "Server online" : "Server offline";
 
                 return "Checking server status...";
@@ -219,8 +211,6 @@ namespace Olbert.LanHistory.ViewModel
 
         public RelayCommand OpeningEventCommand { get; }
         public RelayCommand ExitApplicationCommand { get; }
-        public RelayCommand ShowConfigurationWindowCommand { get; }
-        public RelayCommand HideConfigurationWindowCommand { get; }
         public RelayCommand BackupCommand { get; }
         public RelayCommand WakeServerCommand { get; }
         public RelayCommand<TimeSpan> SetBackupIntervalCommand { get; }
@@ -253,14 +243,6 @@ namespace Olbert.LanHistory.ViewModel
 
                 RaisePropertyChanged( () => StatusMesg );
             }
-        }
-
-        private void ShowHideMainWindow( bool show )
-        {
-            Application.Current.MainWindow = new MainWindow();
-
-            if( show ) Application.Current.MainWindow.Show();
-            else Application.Current.MainWindow.Hide();
         }
 
         private bool IsMainWindowOpen()
@@ -315,7 +297,7 @@ namespace Olbert.LanHistory.ViewModel
             RaisePropertyChanged( () => NextBackup );
         }
 
-        private void PowerModeMessageHandler(PowerModeMessage obj)
+        private void PowerModeMessageHandler( PowerModeMessage obj )
         {
             if( obj != null && obj.Mode == PowerModes.Resume )
             {
@@ -323,9 +305,38 @@ namespace Olbert.LanHistory.ViewModel
 
                 _lanHistory.LastBackup = _dataService.GetLastBackup();
 
-                RaisePropertyChanged(() => StatusMesg);
+                RaisePropertyChanged( () => StatusMesg );
                 RaisePropertyChanged( () => NextBackup );
             }
+        }
+
+        private void UpdateDefaultIntervals( TimeSpan value )
+        {
+            var newList = _defIntervals.Where( di => di.IsHitTestVisible ).ToList();
+
+            bool matchFound = false;
+
+            foreach( var defInterval in newList )
+            {
+                if( defInterval.Interval.Equals( value ) )
+                {
+                    defInterval.IsSelected = true;
+                    matchFound = true;
+                }
+                else defInterval.IsSelected = false;
+            }
+
+            if( !matchFound )
+                newList.Add(
+                    new DefaultBackupInterval( SetBackupIntervalCommand )
+                    {
+                        Interval = value,
+                        IsSelected = true,
+                        IsHitTestVisible = false
+                    } );
+
+            _defIntervals = newList.OrderBy( di => di.Interval ).ToList();
+            RaisePropertyChanged( () => DefaultIntervals );
         }
 
     }
