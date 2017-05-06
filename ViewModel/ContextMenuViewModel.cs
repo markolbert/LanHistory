@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Windows;
 using System.Windows.Documents;
-using FileHistory;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
@@ -105,6 +104,7 @@ namespace Olbert.LanHistory.ViewModel
                     {
                         _lanHistory.Interval = value;
                         RaisePropertyChanged( () => Interval );
+                        RaisePropertyChanged( () => NextBackup );
 
                         UpdateDefaultIntervals( value );
 

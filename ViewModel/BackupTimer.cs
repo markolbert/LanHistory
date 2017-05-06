@@ -2,7 +2,6 @@
 using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
-using FileHistory;
 using GalaSoft.MvvmLight.Messaging;
 using Olbert.LanHistory.Model;
 using Microsoft.Win32;
@@ -21,7 +20,7 @@ namespace Olbert.LanHistory.ViewModel
         private readonly Timer _backupTimer;
         private readonly Timer _shareTimer;
         private readonly Timer _keepAwakeTimer;
-        private bool _shareAccessible;
+        private bool? _shareAccessible;
         private readonly Model.LanHistory _lanHistory;
 
         public BackupTimer()

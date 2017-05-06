@@ -132,6 +132,8 @@ namespace Olbert.LanHistory.Model
             {
                 if( value < MinimumBackupInterval ) value = MinimumBackupInterval;
 
+                if( value < TimeRemaining ) TimeRemaining = value;
+
                 _interval = value;
             }
         }

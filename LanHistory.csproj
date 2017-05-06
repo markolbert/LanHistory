@@ -26,9 +26,10 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>true</RunCodeAnalysis>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -123,6 +124,7 @@
     <Compile Include="converters\TimeSpanFormatter.cs" />
     <Compile Include="Design\DesignDataService.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="FileHistoryService.cs" />
     <Compile Include="IClosable.cs" />
     <Compile Include="converters\IntervalEqualityConverter.cs" />
     <Compile Include="messages\PowerModeMessage.cs" />
@@ -183,12 +185,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="assets\filehist32x32.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FileHistory\FileHistory.csproj">
-      <Project>{f4d5194b-47e3-45fe-98b7-65988afaaebd}</Project>
-      <Name>FileHistory</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
