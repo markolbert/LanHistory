@@ -186,6 +186,12 @@
   <ItemGroup>
     <Resource Include="assets\filehist32x32.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\j4jUI\j4jUI.csproj">
+      <Project>{a510a9cd-e6dc-40e1-b7da-2969448691bb}</Project>
+      <Name>j4jUI</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

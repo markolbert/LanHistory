@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Windows;
-using System.Windows.Documents;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using Microsoft.Win32;
 using Olbert.LanHistory.Model;
-using Olbert.LanHistory.Properties;
-using Serilog;
 
 namespace Olbert.LanHistory.ViewModel
 {
@@ -85,7 +80,7 @@ namespace Olbert.LanHistory.ViewModel
                 _defIntervals.Add( dbi );
             }
 
-            UpdateDefaultIntervals( _lanHistory.Interval );
+            UpdateDefaultIntervals( _lanHistory.Interval, true );
         }
 
         [ Range( typeof(TimeSpan), "0:02:00", "23:59:59", ErrorMessage =
@@ -310,7 +305,7 @@ namespace Olbert.LanHistory.ViewModel
             }
         }
 
-        private void UpdateDefaultIntervals( TimeSpan value )
+        private void UpdateDefaultIntervals( TimeSpan value, bool initial = false )
         {
             var newList = _defIntervals.Where( di => di.IsHitTestVisible ).ToList();
 
@@ -336,7 +331,8 @@ namespace Olbert.LanHistory.ViewModel
                     } );
 
             _defIntervals = newList.OrderBy( di => di.Interval ).ToList();
-            RaisePropertyChanged( () => DefaultIntervals );
+
+            if( !initial ) RaisePropertyChanged( () => DefaultIntervals );
         }
 
     }

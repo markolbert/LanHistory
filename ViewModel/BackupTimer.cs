@@ -1,11 +1,7 @@
 ﻿using System;
-using System.IO;
-using System.Threading.Tasks;
 using System.Timers;
 using GalaSoft.MvvmLight.Messaging;
-using Olbert.LanHistory.Model;
 using Microsoft.Win32;
-using Olbert.LanHistory.Properties;
 using Serilog;
 
 namespace Olbert.LanHistory.ViewModel
