@@ -9,7 +9,7 @@ using Olbert.LanHistory.Properties;
 
 namespace Olbert.LanHistory.Model
 {
-    public class LanHistory : IDisposable
+    public sealed class LanHistory : IDisposable
     {
         public const int MinimumWakeUpMinutes = 2;
         public static TimeSpan MinimumBackupInterval = TimeSpan.FromMinutes( 5 );
@@ -249,18 +249,11 @@ namespace Olbert.LanHistory.Model
             _timer.Enabled = _numToSend > 0;
         }
 
-        protected virtual void Dispose( bool disposing )
-        {
-            if( disposing )
-            {
-                _timer?.Dispose();
-            }
-        }
-
         public void Dispose()
         {
-            Dispose( true );
-            GC.SuppressFinalize( this );
+            // optimizing these lines generates a compiler warning because the compiler isn't
+            // smart enough to check null propagation operations
+            if ( _timer != null ) _timer.Dispose();
         }
     }
 }

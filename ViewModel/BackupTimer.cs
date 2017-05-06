@@ -6,13 +6,12 @@ using Serilog;
 
 namespace Olbert.LanHistory.ViewModel
 {
-    public class BackupTimer : IDisposable
+    public sealed class BackupTimer : IDisposable
     {
         public double BackupTimerTickMS = 30000;
         public double ShareTimerTickMS = 60000;
         public double KeepAwakeTimerTickMS = 5000;
 
-        private readonly Model.LanHistory _lh;
         private readonly Timer _backupTimer;
         private readonly Timer _shareTimer;
         private readonly Timer _keepAwakeTimer;
@@ -35,9 +34,7 @@ namespace Olbert.LanHistory.ViewModel
 
             ViewModelLocator vml = new ViewModelLocator();
 
-            _lanHistory = vml.LanHistory;
-
-            _lh = vml.LanHistory ?? throw new NullReferenceException( "LanHistory" );
+            _lanHistory = vml.LanHistory ?? throw new NullReferenceException("LanHistory"); 
             Enabled = _lanHistory.IsValid;
 
             Messenger.Default.Register<EnableTimerMessage>( this, EnableTimerMessageHandler );
@@ -137,7 +134,7 @@ namespace Olbert.LanHistory.ViewModel
 
         private void KeepAwakeTimerTickHandler( object sender, ElapsedEventArgs e )
         {
-            (bool succeeded, string mesg) = _lh.SendWakeOnLan( repeats : 1 );
+            (bool succeeded, string mesg) = _lanHistory.SendWakeOnLan( repeats : 1 );
 
             var logger = new ViewModelLocator().Logger;
 
@@ -163,16 +160,6 @@ namespace Olbert.LanHistory.ViewModel
             if( obj != null ) Enabled = obj.Enabled;
         }
 
-        //private void WakeUpChangedMessageHandler( WakeUpChangedMessage obj )
-        //{
-        //    if( obj != null ) _wakeUp = obj.WakeUpTime;
-        //}
-
-        //private void IntervalChangedMessageHandler( IntervalChangedMessage obj )
-        //{
-        //    if( obj != null ) _interval = obj.Interval;
-        //}
-
         ////public override void Cleanup()
         ////{
         ////    // Clean up if needed
@@ -180,20 +167,13 @@ namespace Olbert.LanHistory.ViewModel
         ////    base.Cleanup();
         ////}
 
-        protected virtual void Dispose( bool disposing )
-        {
-            if( disposing )
-            {
-                _backupTimer?.Dispose();
-                _shareTimer?.Dispose();
-                SystemEvents.PowerModeChanged -= PowerModeChangedHandler;
-            }
-        }
-
         public void Dispose()
         {
-            Dispose( true );
-            GC.SuppressFinalize( this );
+            // optimizing these lines generates a compiler warning because the compiler isn't
+            // smart enough to check null propagation operations
+            if( _backupTimer != null ) _backupTimer.Dispose();
+            if( _shareTimer != null ) _shareTimer.Dispose();
+            if( _keepAwakeTimer != null ) _keepAwakeTimer.Dispose();
         }
     }
 }

@@ -137,6 +137,7 @@
     <Compile Include="Model\IDataService.cs" />
     <Compile Include="Model\LanHistory.cs" />
     <Compile Include="messages\EnableTimerMessage.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="ViewModel\BackupTimer.cs" />
     <Compile Include="ViewModel\ContextMenuViewModel.cs" />
     <Compile Include="converters\PhysicalAddressFormatter.cs" />

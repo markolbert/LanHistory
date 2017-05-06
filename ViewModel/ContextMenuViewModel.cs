@@ -80,7 +80,7 @@ namespace Olbert.LanHistory.ViewModel
                 _defIntervals.Add( dbi );
             }
 
-            UpdateDefaultIntervals( _lanHistory.Interval, true );
+            UpdateDefaultIntervals( _lanHistory.Interval );
         }
 
         [ Range( typeof(TimeSpan), "0:02:00", "23:59:59", ErrorMessage =
@@ -102,6 +102,7 @@ namespace Olbert.LanHistory.ViewModel
                         RaisePropertyChanged( () => NextBackup );
 
                         UpdateDefaultIntervals( value );
+                        RaisePropertyChanged(() => DefaultIntervals);
 
                         Messenger.Default.Send<IntervalChangedMessage>( new IntervalChangedMessage()
                         {
@@ -305,7 +306,7 @@ namespace Olbert.LanHistory.ViewModel
             }
         }
 
-        private void UpdateDefaultIntervals( TimeSpan value, bool initial = false )
+        private void UpdateDefaultIntervals( TimeSpan value )
         {
             var newList = _defIntervals.Where( di => di.IsHitTestVisible ).ToList();
 
@@ -331,8 +332,6 @@ namespace Olbert.LanHistory.ViewModel
                     } );
 
             _defIntervals = newList.OrderBy( di => di.Interval ).ToList();
-
-            if( !initial ) RaisePropertyChanged( () => DefaultIntervals );
         }
 
     }
