@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.DirectoryServices;
 using System.IO;
@@ -139,7 +140,7 @@ namespace Olbert.LanHistory.Model
                         {
                             _logger.LogDebugInformation("found IP address for backup target");
 
-                            Int32 curIPInt = NativeMethods.INetAddress(ipAddress.ToString());
+                            Int32 curIPInt = BitConverter.ToInt32( ipAddress.GetAddressBytes(), 0 );
 
                             try
                             {
@@ -148,12 +149,16 @@ namespace Olbert.LanHistory.Model
 
                                 int res = NativeMethods.SendARP(curIPInt, 0, ref macInfo, ref length);
 
-                                if (macInfo == 0)
-                                    _logger.Error("No MAC address was found; is the server running?");
+                                if( res != 0 )
+                                    _logger.Error( $"NativeMethods.SendArp() returned value {res}" );
+
+                                if ( macInfo == 0 )
+                                    _logger.Error(
+                                        $"No MAC address was found for IP address {ipAddress} ({curIPInt}) ; is the server running?" );
                                 else
                                 {
-                                    retVal.MacAddress = new PhysicalAddress(BitConverter.GetBytes(macInfo));
-                                    _logger.LogDebugInformation("found MAC address for backup target");
+                                    retVal.MacAddress = new PhysicalAddress( BitConverter.GetBytes( macInfo ) );
+                                    _logger.LogDebugInformation( "found MAC address for backup target" );
                                 }
                             }
                             catch (Exception e)

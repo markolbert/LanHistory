@@ -29,8 +29,8 @@ namespace Olbert.LanHistory
         [ DllImport( "Iphlpapi.dll" ) ]
         internal static extern int SendARP( Int32 dest, Int32 host, ref Int64 mac, ref Int32 len );
 
-        [ DllImport( "Ws2_32.dll", CharSet = CharSet.Unicode, EntryPoint = "inet_addr" ) ]
-        internal static extern Int32 INetAddress( string ip );
+        //[ DllImport( "Ws2_32.dll") ]
+        //internal static extern Int32 inet_addr( string ip );
 
         private void ReleaseUnmanagedResources()
         {
