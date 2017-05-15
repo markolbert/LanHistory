@@ -4,6 +4,7 @@ using System.Threading;
 using System.Windows;
 using GalaSoft.MvvmLight.Threading;
 using Hardcodet.Wpf.TaskbarNotification;
+using Olbert.JumpForJoy.WPF;
 using Olbert.LanHistory.ViewModel;
 
 namespace Olbert.LanHistory
