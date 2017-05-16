@@ -66,7 +66,7 @@ namespace Olbert.LanHistory
 
         private void Terminate( string mesg )
         {
-            J4JMessageBox.Show( mesg, "LanHistory Message" );
+            new J4JMessageBox().Title( "LanHistory Message" ).Message( mesg ).ButtonText( "Okay" ).ShowMessageBox();
             Application.Current.Shutdown();
         }
     }
