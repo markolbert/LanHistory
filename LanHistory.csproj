@@ -331,6 +331,7 @@ rd /s /q "$(TargetDir)sv"
 rd /s /q "$(TargetDir)zh-Hans"
 del /s /q "$(TargetDir)*.xml"
 if $(Configuration) == Release (del /s /q "$(TargetDir)*.pdb")
+copy C:\Programming\LanHistory\J4JResources\bin\$(Configuration)\Olbert.JumpForJoy.DefaultResources.* $(TargetDir)
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
