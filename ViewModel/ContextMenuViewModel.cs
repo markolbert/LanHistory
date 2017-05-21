@@ -160,6 +160,7 @@ namespace Olbert.LanHistory.ViewModel
                 {
                     RaisePropertyChanged( () => ShareAccessible );
                     RaisePropertyChanged( () => ServerStatus );
+                    BackupCommand.RaiseCanExecuteChanged();
                 }
             }
         }

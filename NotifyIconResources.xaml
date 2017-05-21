@@ -31,8 +31,7 @@
         <Separator />
         
         <MenuItem Header="Backup Now" 
-                  Command="{Binding BackupCommand}" 
-                  IsEnabled="{Binding ShareAccessible, Converter={StaticResource NullableBoolean}}" />
+                  Command="{Binding BackupCommand}" />
         
         <MenuItem ItemsSource="{Binding DefaultIntervals}" Header="Backup Every...">
             <MenuItem.ItemContainerStyle>

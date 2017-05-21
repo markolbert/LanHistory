@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Timers;
+using System.Windows;
+using System.Windows.Threading;
 using GalaSoft.MvvmLight.Messaging;
 using Microsoft.Win32;
 using Serilog;
@@ -38,8 +40,6 @@ namespace Olbert.LanHistory.ViewModel
             Enabled = _lanHistory.IsValid;
 
             Messenger.Default.Register<EnableTimerMessage>( this, EnableTimerMessageHandler );
-            //Messenger.Default.Register<IntervalChangedMessage>( this, IntervalChangedMessageHandler );
-            //Messenger.Default.Register<WakeUpChangedMessage>( this, WakeUpChangedMessageHandler );
 
             SystemEvents.PowerModeChanged += PowerModeChangedHandler;
         }
@@ -58,7 +58,8 @@ namespace Olbert.LanHistory.ViewModel
                     PollLan();
                     _backupTimer.Start();
 
-                    Messenger.Default.Send<PowerModeMessage>( new PowerModeMessage() { Mode = e.Mode } );
+                    Application.Current.Dispatcher.Invoke(
+                        () => Messenger.Default.Send<PowerModeMessage>( new PowerModeMessage() { Mode = e.Mode } ) );
 
                     break;
 
@@ -67,7 +68,8 @@ namespace Olbert.LanHistory.ViewModel
 
                     _lanHistory.Save();
 
-                    Messenger.Default.Send<PowerModeMessage>(new PowerModeMessage() { Mode = e.Mode });
+                    Application.Current.Dispatcher.Invoke( 
+                        () => Messenger.Default.Send<PowerModeMessage>( new PowerModeMessage() { Mode = e.Mode } ) );
 
                     _backupTimer.Stop();
 
@@ -86,7 +88,8 @@ namespace Olbert.LanHistory.ViewModel
             LanHistoryMessage lhcm = LanHistoryMessage.GetChanged();
 
             if( lhcm != null )
-                Messenger.Default.Send<LanHistoryMessage>( lhcm );
+                Application.Current.Dispatcher.Invoke( 
+                    () => Messenger.Default.Send<LanHistoryMessage>( lhcm ) );
 
             double msRemaining = _lanHistory.TimeRemaining.TotalMilliseconds;
 
@@ -112,7 +115,10 @@ namespace Olbert.LanHistory.ViewModel
                     }
 
                     _keepAwakeTimer.Stop();
-                    Messenger.Default.Send<BackupResultMessage>( new BackupResultMessage() { Succeeded = succeeded } );
+
+                    Application.Current.Dispatcher.Invoke(
+                        () => Messenger.Default.Send<BackupResultMessage>(
+                            new BackupResultMessage() { Succeeded = succeeded } ) );
                 }
                 else
                 {
@@ -123,8 +129,10 @@ namespace Olbert.LanHistory.ViewModel
             if ( msRemaining <= BackupTimerTickMS ) _lanHistory.TimeRemaining = _lanHistory.Interval;
             else _lanHistory.TimeRemaining -= TimeSpan.FromMilliseconds( BackupTimerTickMS );
 
-            Messenger.Default.Send<BackupTickMessage>(
-                new BackupTickMessage() { TimeRemaining = _lanHistory.TimeRemaining } );
+            Application.Current.Dispatcher.Invoke(
+                () =>
+                    Messenger.Default.Send<BackupTickMessage>(
+                        new BackupTickMessage() { TimeRemaining = _lanHistory.TimeRemaining } ) );
         }
 
         private void ShareTimerTickHandler( object sender, ElapsedEventArgs e )
@@ -151,7 +159,7 @@ namespace Olbert.LanHistory.ViewModel
             {
                 _shareAccessible = changed.ShareAccessible;
 
-                Messenger.Default.Send<ServerStatusMessage>( changed );
+                Application.Current.Dispatcher.Invoke( () => Messenger.Default.Send<ServerStatusMessage>( changed ) );
             }
         }
 
