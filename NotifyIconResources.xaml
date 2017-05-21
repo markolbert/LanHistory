@@ -69,13 +69,17 @@
     <!-- the application's NotifyIcon - started from App.xaml.cs. Declares its own view model. -->
     <tb:TaskbarIcon x:Key="NotifyIcon"
                     IconSource="/assets/filehist32x32.ico"
-                    ToolTipText="Double-click for window, right-click for menu"
                     ContextMenu="{StaticResource SysTrayMenu}">
 
         <!-- self-assign a data context (could also be done programmatically) -->
         <tb:TaskbarIcon.DataContext>
             <vm:ContextMenuViewModel />
         </tb:TaskbarIcon.DataContext>
+        
+        <tb:TaskbarIcon.TrayToolTip>
+            <ToolTip Placement="Mouse" Content="LanHistory: right-click for menu" />
+        </tb:TaskbarIcon.TrayToolTip>
+
     </tb:TaskbarIcon>
 
 </ResourceDictionary>
