@@ -1,7 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
+﻿
+// Copyright (c) 2017 Mark A. Olbert some rights reserved
+//
+// This software is licensed under the terms of the MIT License
+// (https://opensource.org/licenses/MIT)
+
 using System.Threading;
 using System.Windows;
 using GalaSoft.MvvmLight.Threading;

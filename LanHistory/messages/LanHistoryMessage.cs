@@ -1,7 +1,11 @@
-﻿using System;
+﻿
+// Copyright (c) 2017 Mark A. Olbert some rights reserved
+//
+// This software is licensed under the terms of the MIT License
+// (https://opensource.org/licenses/MIT)
+
+using System;
 using System.Net.NetworkInformation;
-using Olbert.LanHistory.Model;
-using Olbert.LanHistory.Properties;
 using Olbert.LanHistory.ViewModel;
 
 namespace Olbert.LanHistory

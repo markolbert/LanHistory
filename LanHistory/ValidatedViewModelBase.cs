@@ -1,12 +1,16 @@
-﻿using System;
+﻿
+// Copyright (c) 2017 Mark A. Olbert some rights reserved
+//
+// This software is licensed under the terms of the MIT License
+// (https://opensource.org/licenses/MIT)
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using GalaSoft.MvvmLight;
 
 namespace Olbert.LanHistory

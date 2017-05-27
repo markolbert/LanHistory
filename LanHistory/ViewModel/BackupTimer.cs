@@ -1,7 +1,12 @@
-﻿using System;
+﻿
+// Copyright (c) 2017 Mark A. Olbert some rights reserved
+//
+// This software is licensed under the terms of the MIT License
+// (https://opensource.org/licenses/MIT)
+
+using System;
 using System.Timers;
 using System.Windows;
-using System.Windows.Threading;
 using GalaSoft.MvvmLight.Messaging;
 using Microsoft.Win32;
 using Serilog;

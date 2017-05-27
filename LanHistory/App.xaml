@@ -1,11 +1,20 @@
-﻿<Application x:Class="Olbert.LanHistory.App"
+﻿<!--
+
+Copyright (c) 2017 Mark A. Olbert some rights reserved
+
+This software is licensed under the terms of the MIT License
+(https://opensource.org/licenses/MIT)
+
+-->
+
+<Application x:Class="Olbert.LanHistory.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:Olbert.LanHistory.ViewModel"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:ignore="http://www.galasoft.ch/ignore"
-			 xmlns:lh="clr-namespace:Olbert.LanHistory"
+             xmlns:vm="clr-namespace:Olbert.LanHistory.ViewModel"
+             xmlns:conv="clr-namespace:Olbert.JumpForJoy.Wpf;assembly=Olbert.JumpForJoy.Wpf.Converters"
              mc:Ignorable="d ignore"
              ShutdownMode="OnExplicitShutdown">
     
@@ -13,7 +22,7 @@
         <ResourceDictionary>
             <!--Global View Model Locator-->
             <vm:ViewModelLocator x:Key="Locator" d:IsDataSource="True" />
-            <lh:PhysicalAddressFormatter x:Key="PhysicalAddressFormatter" />
+            <conv:PhysicalAddressFormatter x:Key="PhysicalAddressFormatter" />
          
             <ControlTemplate x:Key="ValidationTemplate">
                 <Grid>
