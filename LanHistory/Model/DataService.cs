@@ -15,15 +15,29 @@ using Serilog;
 
 namespace Olbert.LanHistory.Model
 {
+    /// <summary>
+    /// Run time implementation of IDataService. Used to retrieve information about the last backup, and
+    /// the current configuration of Windows File History, which can change
+    /// </summary>
     public class DataService : IDataService
     {
         private readonly ILogger _logger;
 
+        /// <summary>
+        /// Creates an instance of DataService
+        /// </summary>
+        /// <param name="logger">an instance of a Serilog logger; a NullReferenceException is thrown if this
+        /// is undefined</param>
         public DataService( ILogger logger )
         {
-            _logger = logger;
+            _logger = logger ?? throw new NullReferenceException( nameof(logger) );
         }
 
+        /// <summary>
+        /// Gets the date and time of the last backup
+        /// </summary>
+        /// <returns>the date and time fo the last backup; returns DateTime.MinValue if no
+        /// backup has yet taken place</returns>
         public DateTime GetLastBackup()
         {
             DateTime? retVal = null;
@@ -47,6 +61,11 @@ namespace Olbert.LanHistory.Model
             return retVal ?? DateTime.MinValue;
         }
 
+        /// <summary>
+        /// Gets the latest configuration information for Windows File History and Lan History Manager
+        /// </summary>
+        /// <returns>the latest configuration information for Windows File History and Lan History Manager, or null
+        /// if the information cannot be retrieved</returns>
         public LanHistory GetLanHistory()
         {
             LanHistory retVal = null;

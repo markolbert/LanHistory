@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Net.NetworkInformation;
 using Olbert.LanHistory.Model;
 
@@ -11,22 +10,22 @@ namespace Olbert.LanHistory.Design
     /// </summary>
     public class DesignDataService : IDataService
     {
-        /// <summary>
-        /// Gets dummy system information at design time
-        /// </summary>
-        /// <returns>dummy system information</returns>
-        public FileHistoryModel GetSystemConfig()
-        {
-            return new FileHistoryModel()
-            {
-                LastBackup = DateTime.Now,
-                IPAddress = IPAddress.Loopback,
-                IsRemote = true,
-                MacAddress = PhysicalAddress.None,
-                MacAddressText = PhysicalAddress.None.ToString(),
-                ServerName = "SomeServer"
-            };
-        }
+        ///// <summary>
+        ///// Gets dummy system information at design time
+        ///// </summary>
+        ///// <returns>dummy system information</returns>
+        //public FileHistoryModel GetSystemConfig()
+        //{
+        //    return new FileHistoryModel()
+        //    {
+        //        LastBackup = DateTime.Now,
+        //        IPAddress = IPAddress.Loopback,
+        //        IsRemote = true,
+        //        MacAddress = PhysicalAddress.None,
+        //        MacAddressText = PhysicalAddress.None.ToString(),
+        //        ServerName = "SomeServer"
+        //    };
+        //}
 
         /// <summary>
         /// Gets the date and time of the last backup done by Windows File History.

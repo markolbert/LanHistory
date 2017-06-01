@@ -20,10 +20,13 @@ This software is licensed under the terms of the MIT License
     
     <Application.Resources>
         <ResourceDictionary>
-            <!--Global View Model Locator-->
+            <!-- Global View Model Locator -->
             <vm:ViewModelLocator x:Key="Locator" d:IsDataSource="True" />
+
+            <!-- formatter that converts PhysicalAddress objects to a textual MAC accress format -->
             <conv:PhysicalAddressFormatter x:Key="PhysicalAddressFormatter" />
          
+            <!--
             <ControlTemplate x:Key="ValidationTemplate">
                 <Grid>
                     <Border ToolTip="{Binding Path=/ErrorContent}" 
@@ -39,12 +42,15 @@ This software is licensed under the terms of the MIT License
                     <AdornedElementPlaceholder />
                 </Grid>
             </ControlTemplate>
+            -->
 
             <ResourceDictionary.MergedDictionaries>
+                <!--
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Teal.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Amber.xaml" />
+                -->
                 <ResourceDictionary Source="NotifyIconResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

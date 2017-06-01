@@ -17,32 +17,56 @@ using Olbert.LanHistory.Model;
 
 namespace Olbert.LanHistory.ViewModel
 {
+    /// <summary>
+    /// The view model used by the task bar context menu UI for Lan History Manager
+    /// </summary>
     public class ContextMenuViewModel : ValidatedViewModelBase
     {
+        /// <summary>
+        /// A view model for the backup interval menu items
+        /// </summary>
         public class DefaultBackupInterval : ViewModelBase
         {
             private TimeSpan _interval;
             private bool _isSelected;
 
+            /// <summary>
+            /// Defines a backup interval menu element
+            /// </summary>
+            /// <param name="setBackupIntervalCommand">the MvvmLight RelayCommand that handles selection of 
+            /// backup interval menu items</param>
             public DefaultBackupInterval( RelayCommand<TimeSpan> setBackupIntervalCommand )
             {
                 SetBackupIntervalCommand = setBackupIntervalCommand;
             }
 
+            /// <summary>
+            /// the MvvmLight RelayCommand that handles selection of 
+            /// backup interval menu items
+            /// </summary>
             public RelayCommand<TimeSpan> SetBackupIntervalCommand { get; }
 
+            /// <summary>
+            /// The interval between backups. This is an MvvmLight dependency property.
+            /// </summary>
             public TimeSpan Interval
             {
                 get => _interval;
                 set => Set<TimeSpan>( ref _interval, value );
             }
 
+            /// <summary>
+            /// Flag indicating whether this menu item is selected. This is an MvvmLight dependency property.
+            /// </summary>
             public bool IsSelected
             {
                 get => _isSelected;
                 set => Set<bool>( ref _isSelected, value );
             }
 
+            /// <summary>
+            /// Flag indicating whether or not this menu item is selectable.
+            /// </summary>
             public bool IsHitTestVisible { get; set; } = true;
         }
 
@@ -53,6 +77,9 @@ namespace Olbert.LanHistory.ViewModel
         private readonly Model.LanHistory _lanHistory;
         private List<DefaultBackupInterval> _defIntervals = new List<DefaultBackupInterval>();
 
+        /// <summary>
+        /// Creates an instance of the view model
+        /// </summary>
         public ContextMenuViewModel()
         {
             var vml = new ViewModelLocator();
@@ -69,7 +96,7 @@ namespace Olbert.LanHistory.ViewModel
 
             Messenger.Default.Register<BackupResultMessage>( this, BackupResultMessageHandler );
             Messenger.Default.Register<BackupTickMessage>( this, BackupTickMessageHandler );
-            Messenger.Default.Register<EnableTimerMessage>( this, EnableTimerMessageHandler );
+            //Messenger.Default.Register<EnableTimerMessage>( this, EnableTimerMessageHandler );
             Messenger.Default.Register<ServerStatusMessage>( this, ServerStatusMessageHandler );
             Messenger.Default.Register<LanHistoryMessage>( this, LanHistoryChangedMessageHandler );
             Messenger.Default.Register<PowerModeMessage>( this, PowerModeMessageHandler );
@@ -89,6 +116,12 @@ namespace Olbert.LanHistory.ViewModel
             UpdateDefaultIntervals( _lanHistory.Interval );
         }
 
+        /// <summary>
+        /// The interval between backups, which must be between 2 minutes and 23 hours, 59 minutes
+        /// and 59 seconds.
+        /// 
+        /// This is an MvvmLight dependency property.
+        /// </summary>
         [ Range( typeof(TimeSpan), "0:02:00", "23:59:59", ErrorMessage =
             "The backup interval must be between 2 minutes and 23:59:59" ) ]
         public TimeSpan Interval
@@ -110,16 +143,23 @@ namespace Olbert.LanHistory.ViewModel
                         UpdateDefaultIntervals( value );
                         RaisePropertyChanged(() => DefaultIntervals);
 
-                        Messenger.Default.Send<IntervalChangedMessage>( new IntervalChangedMessage()
-                        {
-                            Interval = value
-                        } );
+                        //Messenger.Default.Send<IntervalChangedMessage>( new IntervalChangedMessage()
+                        //{
+                        //    Interval = value
+                        //} );
                     }
                 }
             }
         }
 
-        [ Range( 1, Int32.MaxValue, ErrorMessage = "The wake up period must be at least 1 minute" ) ]
+        /// <summary>
+        /// The time needed, in minutes, for the backup server to wake up and become able to receive a backup.
+        /// 
+        /// This value must be at least 2 minutes.
+        /// 
+        /// This is an MvvmLight dependency property.
+        /// </summary>
+        [Range( Model.LanHistory.MinimumWakeUpMinutes, Int32.MaxValue, ErrorMessage = "The wake up period must be at least 2 minutes" ) ]
         public int WakeUpTime
         {
             get => _lanHistory.WakeUpTime;
@@ -137,21 +177,33 @@ namespace Olbert.LanHistory.ViewModel
                         _lanHistory.WakeUpTime = value;
                         RaisePropertyChanged( () => WakeUpTime );
 
-                        Messenger.Default.Send<WakeUpChangedMessage>( new WakeUpChangedMessage()
-                        {
-                            WakeUpTime = value
-                        } );
+                        //Messenger.Default.Send<WakeUpChangedMessage>( new WakeUpChangedMessage()
+                        //{
+                        //    WakeUpTime = value
+                        //} );
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// The default backup intervals
+        /// </summary>
         public List<DefaultBackupInterval> DefaultIntervals
         {
             get => _defIntervals;
             //set => Set<List<DefaultBackupInterval>>( ref _defIntervals, value );
         }
 
+        /// <summary>
+        /// Flag indicating whether or not the backup server is accessible:
+        /// 
+        /// - true means it is;
+        /// - false means it isn't;
+        /// - null means its state is unknown
+        /// 
+        /// This is an MvvmLight dependency property.
+        /// </summary>
         public bool? ShareAccessible
         {
             get => _shareAccessible;
@@ -171,6 +223,9 @@ namespace Olbert.LanHistory.ViewModel
             }
         }
 
+        /// <summary>
+        /// Status message about the last backup
+        /// </summary>
         public string StatusMesg
         {
             get
@@ -187,6 +242,9 @@ namespace Olbert.LanHistory.ViewModel
             }
         }
 
+        /// <summary>
+        /// Status message about the next scheduled backup
+        /// </summary>
         public string NextBackup
         {
             get
@@ -201,6 +259,9 @@ namespace Olbert.LanHistory.ViewModel
             }
         }
 
+        /// <summary>
+        /// Message about the backup server's status
+        /// </summary>
         public string ServerStatus
         {
             get
@@ -212,10 +273,29 @@ namespace Olbert.LanHistory.ViewModel
             }
         }
 
+        /// <summary>
+        /// MvvmLight RelayCommand triggered when the context menu is opened
+        /// </summary>
         public RelayCommand OpeningEventCommand { get; }
+
+        /// <summary>
+        /// MvvmLight RelayCommand triggered when the user requests the application to exit
+        /// </summary>
         public RelayCommand ExitApplicationCommand { get; }
+
+        /// <summary>
+        /// MvvmLight RelayCommand triggered when the user requests a manual backup
+        /// </summary>
         public RelayCommand BackupCommand { get; }
+
+        /// <summary>
+        /// MvvmLight RelayCommand triggered when the user makes a "wake server" request
+        /// </summary>
         public RelayCommand WakeServerCommand { get; }
+
+        /// <summary>
+        /// MvvmLight RelayCommand triggered when a backup interval is selected through the UI
+        /// </summary>
         public RelayCommand<TimeSpan> SetBackupIntervalCommand { get; }
 
         private void OpeningEventHandler()
@@ -283,10 +363,10 @@ namespace Olbert.LanHistory.ViewModel
                 RaisePropertyChanged( () => NextBackup );
         }
 
-        private void EnableTimerMessageHandler( EnableTimerMessage obj )
-        {
-            RaisePropertyChanged( () => NextBackup );
-        }
+        //private void EnableTimerMessageHandler( EnableTimerMessage obj )
+        //{
+        //    RaisePropertyChanged( () => NextBackup );
+        //}
 
         private void ServerStatusMessageHandler( ServerStatusMessage obj )
         {

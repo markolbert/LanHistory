@@ -17,6 +17,7 @@ This software is licensed under the terms of the MIT License
                     xmlns:conv="clr-namespace:Olbert.JumpForJoy.Wpf;assembly=Olbert.JumpForJoy.Wpf.Converters"
                     xmlns:command="http://www.galasoft.ch/mvvmlight">
 
+    <!-- converters and formatters to display objects as text -->
     <conv:IntervalEqualityConverter x:Key="IntervalEquality" />
     <conv:TimeSpanFormatter x:Key="TimeSpanFormatter"/>
     <conv:NullableBooleanConverter x:Key="NullableBoolean" />
@@ -24,9 +25,10 @@ This software is licensed under the terms of the MIT License
     <!--
         The "shared" directive is needed if we reopen the sample window a few times - WPF will otherwise
         reuse the same context menu (which is a resource) again (which will have its DataContext set to the old TaskbarIcon)
-  -->
+    -->
     <ContextMenu x:Shared="false"
                  x:Key="SysTrayMenu">
+        <!-- binds an MvvmLight RelayCommand to the WPF "menu opened" event -->
         <i:Interaction.Triggers>
             <i:EventTrigger EventName="Opened">
                 <command:EventToCommand Command="{Binding OpeningEventCommand, Mode=OneWay}" MustToggleIsEnabledValue="True" />
@@ -43,6 +45,10 @@ This software is licensed under the terms of the MIT License
                   Command="{Binding BackupCommand}" />
         
         <MenuItem ItemsSource="{Binding DefaultIntervals}" Header="Backup Every...">
+            <!-- 
+            defines how to display the default interval menu items, and what view model properties their properties
+            are bound to 
+            -->
             <MenuItem.ItemContainerStyle>
                 <Style>
                     <Setter Property="MenuItem.Header" Value="{Binding Interval, Converter={StaticResource TimeSpanFormatter}}" />

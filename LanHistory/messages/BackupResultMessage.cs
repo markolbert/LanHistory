@@ -6,8 +6,15 @@
 
 namespace Olbert.LanHistory
 {
+    /// <summary>
+    /// MvvmLight Messenger class used to report whether or not the last backup
+    /// job request succeeded
+    /// </summary>
     public class BackupResultMessage
     {
+        /// <summary>
+        /// Flag indicating whether or not the last backup job request succeeded
+        /// </summary>
         public bool Succeeded { get; set; }
     }
 }

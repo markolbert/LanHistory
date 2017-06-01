@@ -8,8 +8,15 @@ using Microsoft.Win32;
 
 namespace Olbert.LanHistory
 {
+    /// <summary>
+    /// MvvmLight Messenger class used to report what power event (e.g., waking up
+    /// from sleep) just occurred
+    /// </summary>
     public class PowerModeMessage
     {
+        /// <summary>
+        /// The power event that just occurred
+        /// </summary>
         public PowerModes Mode { get; set; }
     }
 }

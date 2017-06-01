@@ -13,11 +13,31 @@ using Serilog;
 
 namespace Olbert.LanHistory.ViewModel
 {
+    /// <summary>
+    /// The central timer for Lan History Manager; checks server status, triggers backups, and keeps the
+    /// backup server awake while a backup is pending (because the backup server might try to sleep
+    /// between the time it is woken up to receive a backup and when the backup actually starts).
+    /// </summary>
     public sealed class BackupTimer : IDisposable
     {
-        public double BackupTimerTickMS = 30000;
-        public double ShareTimerTickMS = 60000;
-        public double KeepAwakeTimerTickMS = 5000;
+        /// <summary>
+        /// The interval, in milliseconds, between checks to determine whether or not the backup
+        /// state should change, progressing from "awaiting next backup", to "wake server", to "trigger backup",
+        /// and back to "awaiting next backup" (30,000 milliseconds)
+        /// </summary>
+        public const double BackupTimerTickMS = 30000;
+
+        /// <summary>
+        /// The interval, in milliseconds, between checks to see if the backup server is accessible
+        /// (60,000 milliseconds)
+        /// </summary>
+        public const double ShareTimerTickMS = 60000;
+
+        /// <summary>
+        /// The interval, in milliseconds, between sending "wake on lan" packets to the backup server
+        /// to keep it awake (5,000 milliseconds)
+        /// </summary>
+        public const double KeepAwakeTimerTickMS = 5000;
 
         private readonly Timer _backupTimer;
         private readonly Timer _shareTimer;
@@ -25,6 +45,10 @@ namespace Olbert.LanHistory.ViewModel
         private bool? _shareAccessible;
         private readonly Model.LanHistory _lanHistory;
 
+        /// <summary>
+        /// Creates an instance of BackupTimer and starts the actual backup timer and the check server 
+        /// status timer
+        /// </summary>
         public BackupTimer()
         {
             _backupTimer = new Timer( BackupTimerTickMS );
@@ -44,11 +68,15 @@ namespace Olbert.LanHistory.ViewModel
             _lanHistory = vml.LanHistory ?? throw new NullReferenceException("LanHistory"); 
             Enabled = _lanHistory.IsValid;
 
-            Messenger.Default.Register<EnableTimerMessage>( this, EnableTimerMessageHandler );
+            //Messenger.Default.Register<EnableTimerMessage>( this, EnableTimerMessageHandler );
 
             SystemEvents.PowerModeChanged += PowerModeChangedHandler;
         }
 
+        /// <summary>
+        /// Flag indicating whether or not the BackupTimer is enabled. If false, that generally
+        /// means somethings is misconfigured
+        /// </summary>
         public bool Enabled { get; private set; }
 
         private void PowerModeChangedHandler( object sender, PowerModeChangedEventArgs e )
@@ -168,10 +196,10 @@ namespace Olbert.LanHistory.ViewModel
             }
         }
 
-        private void EnableTimerMessageHandler( EnableTimerMessage obj )
-        {
-            if( obj != null ) Enabled = obj.Enabled;
-        }
+        //private void EnableTimerMessageHandler( EnableTimerMessage obj )
+        //{
+        //    if( obj != null ) Enabled = obj.Enabled;
+        //}
 
         ////public override void Cleanup()
         ////{
@@ -180,6 +208,9 @@ namespace Olbert.LanHistory.ViewModel
         ////    base.Cleanup();
         ////}
 
+        /// <summary>
+        /// Disposes of the timers
+        /// </summary>
         public void Dispose()
         {
             // optimizing these lines generates a compiler warning because the compiler isn't

@@ -10,7 +10,6 @@
 */
 
 using System;
-using System.Diagnostics;
 using Autofac;
 using Autofac.Extras.CommonServiceLocator;
 using GalaSoft.MvvmLight;
@@ -25,14 +24,14 @@ namespace Olbert.LanHistory.ViewModel
     /// <summary>
     /// This class contains static references to all the view models in the
     /// application and provides an entry point for the bindings.
-    /// <para>
-    /// See http://www.mvvmlight.net
-    /// </para>
     /// </summary>
     public class ViewModelLocator
     {
         private static readonly IContainer _container;
 
+        /// <summary>
+        /// Initializes the ViewModelLocator
+        /// </summary>
         static ViewModelLocator()
         {
             var builder = new ContainerBuilder();
@@ -76,27 +75,28 @@ namespace Olbert.LanHistory.ViewModel
             ServiceLocator.SetLocatorProvider( () => new AutofacServiceLocator( _container ) );
         }
 
-        ///// <summary>
-        ///// Gets the Configuration property.
-        ///// </summary>
-        //[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance",
-        //    "CA1822:MarkMembersAsStatic",
-        //    Justification = "This non-static member is needed for data binding purposes.")]
-        //public ConfigurationViewModel Configuration
-        //{
-        //    get
-        //    {
-        //        return ServiceLocator.Current.GetInstance<ConfigurationViewModel>();
-        //    }
-        //}
-
+        /// <summary>
+        /// The singleton instance of LanHistory
+        /// </summary>
         public Model.LanHistory LanHistory => ServiceLocator.Current.GetInstance<Model.LanHistory>();
+
+        /// <summary>
+        /// The singleton instance of the Serilog logger
+        /// </summary>
         public ILogger Logger => ServiceLocator.Current.GetInstance<ILogger>();
+
+        /// <summary>
+        /// The singleton instance of BackupTimer
+        /// </summary>
         public BackupTimer BackupTimer => ServiceLocator.Current.GetInstance<BackupTimer>();
+
+        /// <summary>
+        /// The current/active IDataService, which changes between design-time and run time
+        /// </summary>
         public IDataService DataService => ServiceLocator.Current.GetInstance<IDataService>();
 
         /// <summary>
-        /// Cleans up all the resources.
+        /// Cleans up all the resources. Currently does nothing.
         /// </summary>
         public static void Cleanup()
         {

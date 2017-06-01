@@ -10,8 +10,17 @@ using Serilog;
 
 namespace Olbert.LanHistory
 {
+    /// <summary>
+    /// Utility extensions
+    /// </summary>
     public static class Extensions
     {
+        /// <summary>
+        /// Logs a message to the Serilog logger, but only when the application is running in
+        /// debug mode
+        /// </summary>
+        /// <param name="logger">the Serilog logger</param>
+        /// <param name="mesg">the message to log</param>
         [Conditional("DEBUG")]
         public static void LogDebugInformation( this ILogger logger, string mesg )
         {

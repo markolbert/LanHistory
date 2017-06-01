@@ -8,7 +8,7 @@ using System;
 using System.Net;
 using System.Net.NetworkInformation;
 
-namespace Olbert.LanHistory.Model
+namespace Olbert.LanHistory.Model.Deprecated
 {
     public class FileHistoryModel
     {

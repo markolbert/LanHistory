@@ -4,7 +4,7 @@
 // This software is licensed under the terms of the MIT License
 // (https://opensource.org/licenses/MIT)
 
-namespace Olbert.LanHistory
+namespace Olbert.LanHistory.Deprecated
 {
     public class EnableTimerMessage
     {

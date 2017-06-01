@@ -9,6 +9,9 @@ using System.Runtime.InteropServices;
 
 namespace Olbert.LanHistory
 {
+    /// <summary>
+    /// Defines native methods used to interact with the Windows File History service
+    /// </summary>
     internal class NativeMethods : IDisposable
     {
         [ DllImport( "FhSvcCtl.dll" ) ]
