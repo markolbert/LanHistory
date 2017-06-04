@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LanHistory": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Programming\\LanHistory\\LanHistory\\bin\\Debug\\net47\\LanHistory.exe"
+    }
+  }
+}

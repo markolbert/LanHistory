@@ -45,12 +45,7 @@ This software is licensed under the terms of the MIT License
             -->
 
             <ResourceDictionary.MergedDictionaries>
-                <!--
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Teal.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Amber.xaml" />
-                -->
+                <ResourceDictionary Source="/Olbert.J4JResources;component/DefaultResources.xaml" />
                 <ResourceDictionary Source="NotifyIconResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

@@ -13,6 +13,7 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using Microsoft.Win32;
+using Olbert.JumpForJoy.WPF;
 using Olbert.LanHistory.Model;
 
 namespace Olbert.LanHistory.ViewModel
@@ -89,6 +90,7 @@ namespace Olbert.LanHistory.ViewModel
 
             OpeningEventCommand = new RelayCommand( OpeningEventHandler );
             ExitApplicationCommand = new RelayCommand( () => Application.Current.Shutdown() );
+            AboutCommand = new RelayCommand( ShowAbout );
 
             BackupCommand = new RelayCommand( Backup, () => _lanHistory.IsValid && ( ShareAccessible ?? false ) );
             WakeServerCommand = new RelayCommand( SendWakeOnLan, () => _lanHistory.MacAddressIsValid );
@@ -279,6 +281,11 @@ namespace Olbert.LanHistory.ViewModel
         public RelayCommand OpeningEventCommand { get; }
 
         /// <summary>
+        /// MvvmLight RelayCommand triggered when the user requests the about menu item
+        /// </summary>
+        public RelayCommand AboutCommand { get; }
+
+        /// <summary>
         /// MvvmLight RelayCommand triggered when the user requests the application to exit
         /// </summary>
         public RelayCommand ExitApplicationCommand { get; }
@@ -303,6 +310,21 @@ namespace Olbert.LanHistory.ViewModel
             _lanHistory.LastBackup = _dataService.GetLastBackup();
 
             RaisePropertyChanged( () => StatusMesg );
+        }
+
+        private void ShowAbout()
+        {
+            string mesg = @"
+Lan History Manager
+v 0.5.1
+
+Jump for Joy Software
+© 2017 Mark A. Olbert";
+
+            new J4JMessageBox().Title( "About Lan History Manager" )
+                .Message( mesg )
+                .ButtonText( "Okay" )
+                .ShowMessageBox();
         }
 
         private void Backup()

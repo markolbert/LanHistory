@@ -38,8 +38,8 @@
     <PackageReference Include="Autofac.Extras.CommonServiceLocator" Version="4.0.0" />
     <PackageReference Include="Extended.Wpf.Toolkit" Version="3.0.0" />
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.0.8" />
-    <PackageReference Include="MaterialDesignThemes" Version="2.3.0.823" />
     <PackageReference Include="MvvmLightLibs" Version="5.3.0" />
+    <PackageReference Include="Olbert.J4JResources" Version="0.5.0" />
     <PackageReference Include="Olbert.JumpForJoy.UI" Version="0.5.0" />
     <PackageReference Include="Olbert.JumpForJoy.Wpf.Converters" Version="0.5.0" />
     <PackageReference Include="Serilog" Version="2.4.0" />

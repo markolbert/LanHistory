@@ -76,7 +76,8 @@ This software is licensed under the terms of the MIT License
         <MenuItem Header="Wake Server" Command="{Binding WakeServerCommand}" />
         
         <Separator />
-        
+
+        <MenuItem Header="About" Command="{Binding AboutCommand}" />
         <MenuItem Header="Exit" Command="{Binding ExitApplicationCommand}" />
     </ContextMenu>
 
