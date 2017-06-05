@@ -7,7 +7,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Windows;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
@@ -91,6 +94,7 @@ namespace Olbert.LanHistory.ViewModel
             OpeningEventCommand = new RelayCommand( OpeningEventHandler );
             ExitApplicationCommand = new RelayCommand( () => Application.Current.Shutdown() );
             AboutCommand = new RelayCommand( ShowAbout );
+            HelpCommand = new RelayCommand(ShowHelp);
 
             BackupCommand = new RelayCommand( Backup, () => _lanHistory.IsValid && ( ShareAccessible ?? false ) );
             WakeServerCommand = new RelayCommand( SendWakeOnLan, () => _lanHistory.MacAddressIsValid );
@@ -286,6 +290,11 @@ namespace Olbert.LanHistory.ViewModel
         public RelayCommand AboutCommand { get; }
 
         /// <summary>
+        /// MvvmLight RelayCommand triggered when the user requests the help menu item
+        /// </summary>
+        public RelayCommand HelpCommand { get; }
+
+        /// <summary>
         /// MvvmLight RelayCommand triggered when the user requests the application to exit
         /// </summary>
         public RelayCommand ExitApplicationCommand { get; }
@@ -314,17 +323,30 @@ namespace Olbert.LanHistory.ViewModel
 
         private void ShowAbout()
         {
-            string mesg = @"
-Lan History Manager
-v 0.5.1
+            var exeAss = Assembly.GetExecutingAssembly().GetName();
+            var exePath = Assembly.GetEntryAssembly().Location;
+            var verInfo = String.IsNullOrEmpty( exePath ) ? null : FileVersionInfo.GetVersionInfo( exePath );
 
-Jump for Joy Software
-© 2017 Mark A. Olbert";
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append( "Lan History Manager" );
+            sb.Append( $"\nv{exeAss.Version.ToString()}" );
+
+            if( verInfo != null )
+            {
+                sb.Append( $"\n\n{verInfo.CompanyName}" );
+                sb.Append( $"\n\n{verInfo.LegalCopyright}" );
+            }
 
             new J4JMessageBox().Title( "About Lan History Manager" )
-                .Message( mesg )
+                .Message( sb.ToString() )
                 .ButtonText( "Okay" )
                 .ShowMessageBox();
+        }
+
+        private void ShowHelp()
+        {
+            Process.Start( "http://www.JumpForJoySoftware.com/Lan-History-Manager" );
         }
 
         private void Backup()

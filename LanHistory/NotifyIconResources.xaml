@@ -78,6 +78,10 @@ This software is licensed under the terms of the MIT License
         <Separator />
 
         <MenuItem Header="About" Command="{Binding AboutCommand}" />
+        <MenuItem Header="Online Help" Command="{Binding HelpCommand}" />
+
+        <Separator />
+
         <MenuItem Header="Exit" Command="{Binding ExitApplicationCommand}" />
     </ContextMenu>
 
