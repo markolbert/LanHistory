@@ -5,6 +5,12 @@ VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanHistory", "LanHistory\LanHistory.csproj", "{05CFE9E3-5FB2-49F5-8D9F-48ADA4D48158}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution", "solution", "{F8A6232D-5B76-4196-A95B-11B2BFD7F776}"
+	ProjectSection(SolutionItems) = preProject
+		license.md = license.md
+		readme.md = readme.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
