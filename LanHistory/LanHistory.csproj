@@ -40,12 +40,15 @@
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.0.8" />
     <PackageReference Include="MvvmLightLibs" Version="5.3.0" />
     <PackageReference Include="Olbert.J4JSmiling" Version="0.5.1" />
-    <PackageReference Include="Olbert.JumpForJoy.UI" Version="0.5.0" />
-    <PackageReference Include="Olbert.JumpForJoy.Wpf.Converters" Version="0.5.0" />
     <PackageReference Include="Serilog" Version="2.4.0" />
     <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\WPFUtilities\J4JUI\J4JUI.csproj" />
+    <ProjectReference Include="..\..\WPFUtilities\WpfConverters\WpfConverters.csproj" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
