@@ -4,10 +4,6 @@
 // This software is licensed under the terms of the MIT License
 // (https://opensource.org/licenses/MIT)
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Windows;
 using GalaSoft.MvvmLight.Threading;
