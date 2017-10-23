@@ -161,7 +161,17 @@ namespace Olbert.LanHistory.Model
 
                         if( configValid )
                         {
-                            var ipAddress = Dns.GetHostAddresses( parts[ 0 ] ).FirstOrDefault();
+                            IPAddress ipAddress = null;
+
+                            try
+                            {
+                                ipAddress = Dns.GetHostAddresses( parts[ 0 ] ).FirstOrDefault();
+                            }
+                            catch(Exception e)
+                            {
+                                configValid = false;
+                                _logger.Error( $"Could not find backup server {parts[ 0 ]}, message was {e.Message}" );
+                            }
 
                             if( ipAddress == null )
                             {

@@ -4,6 +4,8 @@
 // This software is licensed under the terms of the MIT License
 // (https://opensource.org/licenses/MIT)
 
+using System;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using GalaSoft.MvvmLight.Threading;
@@ -26,27 +28,56 @@ namespace Olbert.LanHistory
 
         protected override void OnStartup( StartupEventArgs e )
         {
+            bool debugBuild = false;
+
+#if DEBUG
+            debugBuild = true;
+#endif
+
+            var args = Environment.GetCommandLineArgs();
+
+            if( debugBuild || args.Any( a => a.Equals( "/debug", StringComparison.OrdinalIgnoreCase ) ) )
+            {
+                var response = new J4JMessageBox()
+                    .Title( "Ahoy There!" )
+                    .Message(
+                        "You're either running a debug build, or launched the app with the /debug flag. Click Okay to select a debugger." )
+                    .ButtonText( "Okay", "Skip" )
+                    .ShowMessageBox();
+
+                if( response == 0 )
+                {
+                    System.Diagnostics.Debugger.Launch();
+
+                    while( !System.Diagnostics.Debugger.IsAttached )
+                    {
+                        Thread.Sleep( 100 );
+                    }
+                }
+            }
+
             // enforce singleton
             const string appName = "LanHistory";
             bool createdNew;
 
-            _mutex = new Mutex(true, appName, out createdNew);
+            _mutex = new Mutex( true, appName, out createdNew );
 
             if( !createdNew )
                 Terminate( $"{appName} is already running, check the system tray..." );
 
             // make sure File History is configured and using a file share
-            ViewModelLocator locator = (ViewModelLocator)FindResource("Locator");
+            ViewModelLocator locator = (ViewModelLocator) FindResource( "Locator" );
 
             if( locator == null )
-                Terminate("Could not create ViewModelLocator, terminating");
+                Terminate( "Could not create ViewModelLocator, terminating" );
 
             var lh = locator.DataService.GetLanHistory();
             if( lh == null )
-                Terminate("Could not find Windows File History information, terminating...");
+                Terminate( "Could not find Windows File History information, terminating..." );
 
             if( !lh.IsRemote )
-                Terminate( "LanHistory only works when Windows File History is configured to use a network share, terminating..." );
+                Terminate(
+                    "LanHistory only works when Windows File History is configured to use a network share, terminating..." );
 
             base.OnStartup( e );
 

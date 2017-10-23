@@ -12,9 +12,10 @@
 using System;
 using Autofac;
 using Autofac.Extras.CommonServiceLocator;
+using CommonServiceLocator;
 using GalaSoft.MvvmLight;
 using Olbert.LanHistory.Design;
-using Microsoft.Practices.ServiceLocation;
+//using Microsoft.Practices.ServiceLocation;
 using Olbert.LanHistory.Model;
 using Serilog;
 using Serilog.Core;

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanHistory", "LanHistory\LanHistory.csproj", "{05CFE9E3-5FB2-49F5-8D9F-48ADA4D48158}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LanHistory", "LanHistory\LanHistory.csproj", "{05CFE9E3-5FB2-49F5-8D9F-48ADA4D48158}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{F8A6232D-5B76-4196-A95B-11B2BFD7F776}"
 	ProjectSection(SolutionItems) = preProject
@@ -16,6 +16,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfConverters", "..\WPFUtilities\WpfConverters\WpfConverters.csproj", "{CD120175-58DF-42A7-94A0-FC3274E750E4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "subsidiary", "subsidiary", "{CC6FB0AB-0838-413D-ABBA-925B07AEF3E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "J4JSmiling", "..\JumpForJoyPrivate\J4JSmiling\J4JSmiling.csproj", "{87EA6FFC-D5FD-482D-BD05-F49F22A4D710}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +37,10 @@ Global
 		{CD120175-58DF-42A7-94A0-FC3274E750E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD120175-58DF-42A7-94A0-FC3274E750E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD120175-58DF-42A7-94A0-FC3274E750E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87EA6FFC-D5FD-482D-BD05-F49F22A4D710}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87EA6FFC-D5FD-482D-BD05-F49F22A4D710}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87EA6FFC-D5FD-482D-BD05-F49F22A4D710}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87EA6FFC-D5FD-482D-BD05-F49F22A4D710}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,5 +48,9 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{39644582-3A24-4188-B82C-27212D8F3E15} = {CC6FB0AB-0838-413D-ABBA-925B07AEF3E1}
 		{CD120175-58DF-42A7-94A0-FC3274E750E4} = {CC6FB0AB-0838-413D-ABBA-925B07AEF3E1}
+		{87EA6FFC-D5FD-482D-BD05-F49F22A4D710} = {CC6FB0AB-0838-413D-ABBA-925B07AEF3E1}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8AE4E0EE-0E04-422F-B252-B92AE990F745}
 	EndGlobalSection
 EndGlobal
